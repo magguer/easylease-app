@@ -1,0 +1,288 @@
+{
+  "common": {
+    "appName": "EasyLease Admin",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "create": "Crear",
+    "add": "Agregar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "refresh": "Actualizar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No",
+    "required": "Requerido",
+    "optional": "Opcional",
+    "all": "Todos",
+    "none": "Ninguno"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "loginButton": "Iniciar Sesión",
+    "loginError": "Correo o contraseña inválidos",
+    "loginSuccess": "¡Bienvenido de nuevo!",
+    "sessionExpired": "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
+  },
+  "navigation": {
+    "dashboard": "Inicio",
+    "home": "Inicio",
+    "listings": "Propiedades",
+    "myProperties": "Mis Propiedades",
+    "leads": "Clientes Potenciales",
+    "myLeads": "Mis Clientes Potenciales",
+    "partners": "Propietarios",
+    "tenants": "Inquilinos",
+    "myTenants": "Mis Inquilinos",
+    "financial": "Financiero",
+    "payments": "Pagos",
+    "maintenance": "Mantenimiento",
+    "documents": "Documentos",
+    "settings": "Configuración"
+  },
+  "dashboard": {
+    "title": "Inicio",
+    "welcome": "Bienvenido a EasyLease Admin",
+    "statistics": "Estadísticas",
+    "totalListings": "Total de Propiedades",
+    "activeListings": "Propiedades Activas",
+    "totalLeads": "Total de Clientes",
+    "newLeads": "Nuevos Clientes",
+    "totalPartners": "Total de Socios",
+    "totalTenants": "Total de Inquilinos",
+    "activeTenants": "Inquilinos Activos",
+    "recentActivity": "Actividad Reciente",
+    "quickActions": "Acciones Rápidas",
+    "myProperties": "Mis Propiedades",
+    "myPropertiesSubtitle": "Gestionar mis propiedades",
+    "myTenants": "Mis Inquilinos",
+    "myTenantsSubtitle": "Información de contratos",
+    "monthlyIncome": "Ingresos Mensuales",
+    "thisMonth": "Este mes",
+    "rented": "alquiladas",
+    "active": "activos",
+    "financialSummary": "Resumen Financiero",
+    "financialSubtitle": "Ingresos y pagos",
+    "myHome": "Mi Hogar",
+    "welcomeTenant": "Bienvenido",
+    "yourProperty": "Tu Propiedad",
+    "nextPayment": "Próximo Pago",
+    "leaseEnd": "Fin del Contrato",
+    "monthsRemaining": "meses restantes",
+    "paymentHistory": "Historial de Pagos",
+    "paymentHistorySubtitle": "Ver todos los pagos",
+    "requestMaintenance": "Solicitar Mantenimiento",
+    "maintenanceSubtitle": "Reportar un problema",
+    "myDocuments": "Mis Documentos",
+    "documentsSubtitle": "Contrato, recibos, etc.",
+    "newProperty": "Nueva Propiedad",
+    "newPropertySubtitle": "Crear una nueva propiedad",
+    "viewLeads": "Ver Clientes",
+    "viewLeadsSubtitle": "Gestionar interesados",
+    "myLeads": "Mis Clientes Potenciales"
+  },
+  "listings": {
+    "title": "Propiedades",
+    "count_one": "propiedad",
+    "count_other": "propiedades",
+    "createListing": "Crear Propiedad",
+    "editListing": "Editar Propiedad",
+    "viewListing": "Ver Propiedad",
+    "deleteListing": "Eliminar Propiedad",
+    "listingDetails": "Detalles de Propiedad",
+    "noListings": "No se encontraron propiedades",
+    "createFirst": "Crea tu primera propiedad",
+    "detail": {
+      "title": "Detalle de Propiedad"
+    },
+    "fields": {
+      "title": "Título",
+      "description": "Descripción",
+      "price": "Precio",
+      "pricePerMonth": "Precio por Mes",
+      "location": "Ubicación",
+      "bedrooms": "Habitaciones",
+      "bathrooms": "Baños",
+      "area": "Área (m²)",
+      "propertyType": "Tipo de Propiedad",
+      "status": "Estado",
+      "images": "Imágenes",
+      "amenities": "Amenidades",
+      "partner": "Socio/Propietario"
+    },
+    "status": {
+      "active": "Activa",
+      "pending": "Pendiente",
+      "rented": "Rentada",
+      "inactive": "Inactiva"
+    },
+    "propertyTypes": {
+      "apartment": "Apartamento",
+      "house": "Casa",
+      "studio": "Estudio",
+      "loft": "Loft",
+      "penthouse": "Penthouse"
+    },
+    "messages": {
+      "createSuccess": "Propiedad creada exitosamente",
+      "updateSuccess": "Propiedad actualizada exitosamente",
+      "deleteSuccess": "Propiedad eliminada exitosamente",
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar esta propiedad?",
+      "uploadImages": "Subir Imágenes",
+      "maxImages": "Máximo 10 imágenes"
+    }
+  },
+  "leads": {
+    "title": "Clientes Potenciales",
+    "viewLead": "Ver Cliente",
+    "editLead": "Editar Cliente",
+    "deleteLead": "Eliminar Cliente",
+    "leadDetails": "Detalles del Cliente",
+    "noLeads": "No se encontraron clientes",
+    "fields": {
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "message": "Mensaje",
+      "listing": "Propiedad",
+      "status": "Estado",
+      "source": "Origen",
+      "createdAt": "Fecha de Creación",
+      "updatedAt": "Última Actualización"
+    },
+    "status": {
+      "new": "Nuevo",
+      "contacted": "Contactado",
+      "qualified": "Calificado",
+      "converted": "Convertido",
+      "lost": "Perdido"
+    },
+    "source": {
+      "website": "Sitio Web",
+      "referral": "Referido",
+      "direct": "Directo",
+      "other": "Otro"
+    },
+    "actions": {
+      "call": "Llamar",
+      "email": "Correo",
+      "whatsapp": "WhatsApp",
+      "markContacted": "Marcar como Contactado",
+      "markQualified": "Marcar como Calificado",
+      "markConverted": "Marcar como Convertido",
+      "markLost": "Marcar como Perdido"
+    },
+    "messages": {
+      "updateSuccess": "Cliente actualizado exitosamente",
+      "deleteSuccess": "Cliente eliminado exitosamente",
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar este cliente?",
+      "callInitiated": "Llamando...",
+      "emailOpened": "Abriendo cliente de correo...",
+      "whatsappOpened": "Abriendo WhatsApp..."
+    }
+  },
+  "partners": {
+    "title": "Socios",
+    "createPartner": "Crear Socio",
+    "editPartner": "Editar Socio",
+    "viewPartner": "Ver Socio",
+    "deletePartner": "Eliminar Socio",
+    "partnerDetails": "Detalles del Socio",
+    "noPartners": "No se encontraron socios",
+    "createFirst": "Crea tu primer socio",
+    "fields": {
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "company": "Empresa",
+      "address": "Dirección",
+      "notes": "Notas",
+      "status": "Estado",
+      "listings": "Propiedades",
+      "createdAt": "Fecha de Creación"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "messages": {
+      "createSuccess": "Socio creado exitosamente",
+      "updateSuccess": "Socio actualizado exitosamente",
+      "deleteSuccess": "Socio eliminado exitosamente",
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar este socio?"
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "selectLanguage": "Seleccionar Idioma",
+    "english": "Inglés",
+    "spanish": "Español",
+    "notifications": "Notificaciones",
+    "pushNotifications": "Notificaciones Push",
+    "emailNotifications": "Notificaciones por Correo",
+    "account": "Cuenta",
+    "profile": "Perfil",
+    "changePassword": "Cambiar Contraseña",
+    "about": "Acerca de",
+    "version": "Versión",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio"
+  },
+  "tenants": {
+    "title": "Inquilinos",
+    "count_one": "inquilino",
+    "count_other": "inquilinos",
+    "noTenants": "No hay inquilinos",
+    "pullToRefresh": "Desliza hacia abajo para actualizar",
+    "detail": {
+      "title": "Detalle de Inquilino"
+    },
+    "status": {
+      "active": "Activo",
+      "ending_soon": "Por Vencer",
+      "ended": "Finalizado",
+      "terminated": "Terminado"
+    },
+    "lease": {
+      "start": "Inicio",
+      "end": "Fin",
+      "daysRemaining": "días restantes"
+    },
+    "financial": {
+      "weeklyRent": "Renta Semanal",
+      "bond": "Depósito"
+    }
+  },
+  "notifications": {
+    "newLead": "Nuevo cliente potencial recibido",
+    "leadUpdated": "Cliente actualizado",
+    "listingCreated": "Nueva propiedad creada",
+    "listingUpdated": "Propiedad actualizada",
+    "partnerCreated": "Nuevo socio agregado"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Por favor intenta de nuevo.",
+    "network": "Error de red. Por favor verifica tu conexión.",
+    "unauthorized": "No estás autorizado para realizar esta acción.",
+    "notFound": "Recurso no encontrado.",
+    "validation": "Por favor verifica el formulario en busca de errores.",
+    "required": "Este campo es requerido",
+    "invalidEmail": "Por favor ingresa un correo electrónico válido",
+    "invalidPhone": "Por favor ingresa un número de teléfono válido",
+    "minLength": "Se requieren mínimo {{count}} caracteres",
+    "maxLength": "Máximo {{count}} caracteres permitidos"
+  }
+}
