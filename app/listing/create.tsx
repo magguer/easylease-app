@@ -15,6 +15,8 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from '@/hooks/useTranslation';
 import { api } from '@/lib/api';
 import DetailHeader from '@/components/ui/DetailHeader';
+import ImageUpload from '@/components/ui/ImageUpload';
+import DatePickerModal from '@/components/ui/DatePickerModal';
 import { Home, DollarSign, MapPin, Calendar, Image as ImageIcon } from '@tamagui/lucide-icons';
 
 interface FormData {
@@ -33,6 +35,7 @@ interface FormData {
   furnished: boolean;
   pets_allowed: boolean;
   status: string;
+  images: string[];
 }
 
 export default function CreateListingScreen() {
@@ -40,6 +43,7 @@ export default function CreateListingScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: '',
     price_per_week: '',
@@ -56,6 +60,7 @@ export default function CreateListingScreen() {
     furnished: false,
     pets_allowed: false,
     status: 'draft',
+    images: [],
   });
 
   const updateField = (field: keyof FormData, value: any) => {
@@ -101,6 +106,7 @@ export default function CreateListingScreen() {
           formData.pets_allowed && 'pets_allowed',
         ].filter(Boolean),
         status: formData.status,
+        images: formData.images,
       };
 
       const response = await api.listings.create(payload);
@@ -273,12 +279,21 @@ export default function CreateListingScreen() {
 
           <View style={styles.field}>
             <Text style={styles.label}>Available From</Text>
-            <TextInput
+            <TouchableOpacity
               style={styles.input}
-              value={formData.available_from}
-              onChangeText={(value) => updateField('available_from', value)}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#94A3B8"
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={{ color: formData.available_from ? '#272932' : '#94A3B8' }}>
+                {formData.available_from || 'YYYY-MM-DD'}
+              </Text>
+            </TouchableOpacity>
+            <DatePickerModal
+              visible={showDatePicker}
+              onClose={() => setShowDatePicker(false)}
+              onSelect={(date) => updateField('available_from', date)}
+              initialDate={formData.available_from}
+              minimumDate={new Date().toISOString().split('T')[0]}
+              title="Select Available Date"
             />
           </View>
 
@@ -343,12 +358,10 @@ export default function CreateListingScreen() {
         {/* TODO: Images Upload Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Images</Text>
-          <View style={styles.imagePlaceholder}>
-            <ImageIcon size={48} color="#94A3B8" />
-            <Text style={styles.imagePlaceholderText}>
-              Image upload coming soon
-            </Text>
-          </View>
+          <ImageUpload
+            images={formData.images}
+            onImagesChange={(images) => updateField('images', images)}
+          />
         </View>
 
         <View style={{ height: 100 }} />

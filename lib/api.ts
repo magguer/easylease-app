@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 
 // API Base URL - usar la IP de tu máquina para que funcione en dispositivos móviles
 const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.0.98:8008' 
+  ? 'http://172.20.10.2:8008' 
   : 'https://your-production-api.com';
 
 // Storage keys
@@ -97,8 +97,8 @@ export const api = {
       const response = await apiClient.delete(`/listings/${id}`);
       return response.data;
     },
-    uploadImage: async (listingId: string, formData: FormData) => {
-      const response = await apiClient.post(`/listings/${listingId}/images`, formData, {
+    uploadImages: async (formData: FormData) => {
+      const response = await apiClient.post('/listings/upload-images', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
