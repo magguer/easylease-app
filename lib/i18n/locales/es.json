@@ -40,12 +40,12 @@
     "dashboard": "Inicio",
     "home": "Inicio",
     "listings": "Propiedades",
-    "myProperties": "Mis Propiedades",
+    "myProperties": "Propiedades",
     "leads": "Clientes Potenciales",
-    "myLeads": "Mis Clientes Potenciales",
+    "myLeads": "Clientes Potenciales",
     "partners": "Propietarios",
     "tenants": "Inquilinos",
-    "myTenants": "Mis Inquilinos",
+    "myTenants": "Inquilinos",
     "financial": "Financiero",
     "payments": "Pagos",
     "maintenance": "Mantenimiento",
@@ -94,18 +94,18 @@
     "myLeads": "Mis Clientes Potenciales"
   },
   "listings": {
-    "title": "Propiedades",
-    "count_one": "propiedad",
-    "count_other": "propiedades",
-    "createListing": "Crear Propiedad",
-    "editListing": "Editar Propiedad",
-    "viewListing": "Ver Propiedad",
-    "deleteListing": "Eliminar Propiedad",
-    "listingDetails": "Detalles de Propiedad",
-    "noListings": "No se encontraron propiedades",
-    "createFirst": "Crea tu primera propiedad",
+    "title": "Listings",
+    "count_one": "listing",
+    "count_other": "listings",
+    "createListing": "Crear Listing",
+    "editListing": "Editar Listing",
+    "viewListing": "Ver Listing",
+    "deleteListing": "Eliminar Listing",
+    "listingDetails": "Detalles de Listing",
+    "noListings": "No se encontraron listings",
+    "createFirst": "Crea tu primer listing",
     "detail": {
-      "title": "Detalle de Propiedad"
+      "title": "Detalle de Listing"
     },
     "fields": {
       "title": "Título",
@@ -247,6 +247,7 @@
     "count_other": "inquilinos",
     "noTenants": "No hay inquilinos",
     "pullToRefresh": "Desliza hacia abajo para actualizar",
+    "createTenant": "Crear Inquilino",
     "detail": {
       "title": "Detalle de Inquilino"
     },
@@ -264,6 +265,45 @@
     "financial": {
       "weeklyRent": "Renta Semanal",
       "bond": "Depósito"
+    },
+    "form": {
+      "personalInfo": "Información Personal",
+      "emergencyContact": "Contacto de Emergencia",
+      "leaseInfo": "Información del Contrato",
+      "financialInfo": "Información Financiera",
+      "fullName": "Nombre Completo",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "contactName": "Nombre del Contacto",
+      "contactPhone": "Teléfono del Contacto",
+      "relationship": "Relación",
+      "selectListing": "Seleccionar Propiedad",
+      "noListingsAvailable": "No hay propiedades disponibles",
+      "leaseStart": "Inicio del Contrato",
+      "leaseEnd": "Fin del Contrato",
+      "weeklyRent": "Renta Semanal",
+      "bondPaid": "Depósito Pagado",
+      "paymentMethod": "Método de Pago",
+      "notes": "Notas",
+      "createUserAccount": "Crear Cuenta de Usuario",
+      "createUserAccountDesc": "Permitir al inquilino acceder a la app con sus propias credenciales",
+      "password": "Contraseña",
+      "passwordHint": "La contraseña será",
+      "generate": "Generar",
+      "copyCredentials": "Copiar Credenciales",
+      "credentialsCopied": "¡Copiado!",
+      "credentialsCopiedDesc": "Credenciales copiadas al portapapeles. Ahora puedes pegarlas y compartirlas con el inquilino.",
+      "createSuccess": "Inquilino creado exitosamente",
+      "createError": "Error al crear inquilino",
+      "userAccountCreated": "Cuenta de Usuario Creada",
+      "temporaryPassword": "Contraseña Temporal",
+      "shareCredentials": "Por favor comparte estas credenciales con el inquilino"
+    },
+    "paymentMethods": {
+      "bank_transfer": "Transferencia Bancaria",
+      "cash": "Efectivo",
+      "card": "Tarjeta",
+      "other": "Otro"
     }
   },
   "notifications": {

@@ -9,7 +9,7 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Users, Mail, Phone, Home, Calendar, Clock } from '@tamagui/lucide-icons';
 import { useTranslation } from '../../hooks/useTranslation';
 import { api } from '../../lib/api';
 
@@ -108,7 +108,7 @@ export default function TenantsScreen() {
       <View style={styles.tenantHeader}>
         <View style={styles.tenantInfo}>
           <View style={styles.nameRow}>
-            <Ionicons name="person" size={20} color="#272932" />
+            <Users size={20} color="#272932" />
             <Text style={styles.tenantName}>{item.name}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
@@ -120,19 +120,19 @@ export default function TenantsScreen() {
       </View>
 
       <View style={styles.contactRow}>
-        <Ionicons name="mail-outline" size={16} color="#828489" />
+        <Mail size={16} color="#828489" />
         <Text style={styles.contactText}>{item.email}</Text>
       </View>
 
       <View style={styles.contactRow}>
-        <Ionicons name="call-outline" size={16} color="#828489" />
+        <Phone size={16} color="#828489" />
         <Text style={styles.contactText}>{item.phone}</Text>
       </View>
 
       {item.listing_id && (
         <View style={styles.propertySection}>
           <View style={styles.propertyRow}>
-            <Ionicons name="home-outline" size={16} color="#828489" />
+            <Home size={16} color="#828489" />
             <Text style={styles.propertyText}>
               {item.listing_id.address}, {item.listing_id.suburb}
             </Text>
@@ -153,7 +153,7 @@ export default function TenantsScreen() {
         </View>
         {item.days_remaining !== undefined && item.days_remaining > 0 && (
           <View style={styles.daysRemainingBadge}>
-            <Ionicons name="time-outline" size={14} color="#F97316" />
+            <Clock size={14} color="#F97316" />
             <Text style={styles.daysRemainingText}>
               {item.days_remaining} {t('tenants.lease.daysRemaining')}
             </Text>
@@ -191,7 +191,10 @@ export default function TenantsScreen() {
             {tenants.length} {tenants.length === 1 ? t('tenants.count_one') : t('tenants.count_other')}
           </Text>
         </View>
-        <TouchableOpacity style={styles.createButton}>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={() => router.push('/tenant/create')}
+        >
           <Text style={styles.createButtonText}>+ {t('common.add')}</Text>
         </TouchableOpacity>
       </View>
@@ -206,7 +209,7 @@ export default function TenantsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color="#CBD5E1" />
+            <Users size={64} color="#CBD5E1" />
             <Text style={styles.emptyText}>{t('tenants.noTenants')}</Text>
             <Text style={styles.emptySubtext}>{t('tenants.pullToRefresh')}</Text>
           </View>

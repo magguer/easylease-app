@@ -193,7 +193,10 @@ export default function ListingsScreen() {
             {listings.length} {listings.length === 1 ? t('listings.count_one') : t('listings.count_other')}
           </Text>
         </View>
-        <TouchableOpacity style={styles.createButton}>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={() => router.push('/listing/create')}
+        >
           <Text style={styles.createButtonText}>+ {t('common.add')}</Text>
         </TouchableOpacity>
       </View>
@@ -248,12 +251,6 @@ const styles = StyleSheet.create({
   count: {
     fontSize: 14,
     color: '#828489',
-  },
-  createButton: {
-    backgroundColor: '#4D7EA8',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
   },
   createButton: {
     backgroundColor: '#4D7EA8',

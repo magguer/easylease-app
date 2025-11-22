@@ -40,12 +40,12 @@
     "dashboard": "Home",
     "home": "Home",
     "listings": "Listings",
-    "myProperties": "My Properties",
+    "myProperties": "Listings",
     "leads": "Leads",
-    "myLeads": "My Leads",
+    "myLeads": "Leads",
     "partners": "Owners",
     "tenants": "Tenants",
-    "myTenants": "My Tenants",
+    "myTenants": "Tenants",
     "financial": "Financial",
     "payments": "Payments",
     "maintenance": "Maintenance",
@@ -94,9 +94,9 @@
     "myLeads": "My Leads"
   },
   "listings": {
-    "title": "Properties",
-    "count_one": "property",
-    "count_other": "properties",
+    "title": "Listings",
+    "count_one": "listing",
+    "count_other": "listings",
     "createListing": "Create Listing",
     "editListing": "Edit Listing",
     "viewListing": "View Listing",
@@ -105,7 +105,7 @@
     "noListings": "No listings found",
     "createFirst": "Create your first listing",
     "detail": {
-      "title": "Property Details"
+      "title": "Listing Details"
     },
     "fields": {
       "title": "Title",
@@ -247,6 +247,7 @@
     "count_other": "tenants",
     "noTenants": "No tenants",
     "pullToRefresh": "Pull down to refresh",
+    "createTenant": "Create Tenant",
     "detail": {
       "title": "Tenant Details"
     },
@@ -264,6 +265,45 @@
     "financial": {
       "weeklyRent": "Weekly Rent",
       "bond": "Bond"
+    },
+    "form": {
+      "personalInfo": "Personal Information",
+      "emergencyContact": "Emergency Contact",
+      "leaseInfo": "Lease Information",
+      "financialInfo": "Financial Information",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "contactName": "Contact Name",
+      "contactPhone": "Contact Phone",
+      "relationship": "Relationship",
+      "selectListing": "Select Listing",
+      "noListingsAvailable": "No listings available",
+      "leaseStart": "Lease Start",
+      "leaseEnd": "Lease End",
+      "weeklyRent": "Weekly Rent",
+      "bondPaid": "Bond Paid",
+      "paymentMethod": "Payment Method",
+      "notes": "Notes",
+      "createUserAccount": "Create User Account",
+      "createUserAccountDesc": "Allow tenant to access the app with their own credentials",
+      "password": "Password",
+      "passwordHint": "Password will be",
+      "generate": "Generate",
+      "copyCredentials": "Copy Credentials",
+      "credentialsCopied": "Copied!",
+      "credentialsCopiedDesc": "Credentials copied to clipboard. You can now paste and share them with the tenant.",
+      "createSuccess": "Tenant created successfully",
+      "createError": "Failed to create tenant",
+      "userAccountCreated": "User Account Created",
+      "temporaryPassword": "Temporary Password",
+      "shareCredentials": "Please share these credentials with the tenant"
+    },
+    "paymentMethods": {
+      "bank_transfer": "Bank Transfer",
+      "cash": "Cash",
+      "card": "Card",
+      "other": "Other"
     }
   },
   "notifications": {

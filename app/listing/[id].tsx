@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -175,10 +176,7 @@ export default function ListingDetailScreen() {
       <DetailHeader
         title={t('listings.detail.title')}
         showEdit={userRole === 'manager' || userRole === 'owner'}
-        onEdit={() => {
-          // TODO: Navigate to edit screen
-          console.log('Edit listing');
-        }}
+        onEdit={() => router.push(`/listing/edit/${id}`)}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
