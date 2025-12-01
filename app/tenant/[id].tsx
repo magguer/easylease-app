@@ -15,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { api } from '@/lib/api';
 import { getUser } from '@/lib/auth';
 import DetailHeader from '@/components/ui/DetailHeader';
+import StatusBadge from '@/components/ui/StatusBadge';
 import {
   User,
   Mail,
@@ -32,19 +33,24 @@ interface Tenant {
   name: string;
   email: string;
   phone: string;
-  listing_id: {
+  current_contract_id: {
     _id: string;
-    title: string;
-    address: string;
-    suburb: string;
-  };
-  lease_start: string;
-  lease_end: string;
-  lease_duration_weeks: number;
-  days_remaining: number;
-  weekly_rent: number;
-  bond_paid: number;
-  payment_method: string;
+    start_date: string;
+    end_date: string;
+    weekly_rent: number;
+    bond_amount: number;
+    bond_paid: boolean;
+    payment_frequency: string;
+    status: string;
+    days_remaining: number;
+    is_ending_soon: boolean;
+    listing_id: {
+      _id: string;
+      title: string;
+      address: string;
+      suburb: string;
+    } | null;
+  } | null;
   status: string;
   emergency_contact: {
     name: string;
@@ -82,7 +88,7 @@ export default function TenantDetailScreen() {
       console.error('Error loading tenant:', error);
       Alert.alert(
         t('common.error'),
-        error.response?.data?.error || 'Failed to load tenant details'
+        error.response?.data?.error || t('tenants.form.loadError')
       );
       router.back();
     } finally {
@@ -99,8 +105,37 @@ export default function TenantDetailScreen() {
   };
 
   const handleEdit = () => {
-    // TODO: Navigate to edit screen
-    Alert.alert('Edit', 'Edit functionality coming soon');
+    router.push(`/tenant/edit/${id}`);
+  };
+
+  const handleUnlink = () => {
+    Alert.alert(
+      t('tenants.actions.unlink'),
+      t('tenants.unlink.confirmMessage'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.confirm'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.tenants.unlink(id);
+              Alert.alert(t('common.success'), t('tenants.unlink.success'));
+              router.back();
+            } catch (error: any) {
+              console.error('Error unlinking tenant:', error);
+              Alert.alert(
+                t('common.error'),
+                error.response?.data?.error || t('tenants.unlink.error')
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -122,7 +157,7 @@ export default function TenantDetailScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('es-CL', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -141,7 +176,7 @@ export default function TenantDetailScreen() {
     return (
       <View style={styles.errorContainer}>
         <AlertCircle size={48} color="#E89E8C" />
-        <Text style={styles.errorText}>Tenant not found</Text>
+        <Text style={styles.errorText}>Inquilino no encontrado</Text>
       </View>
     );
   }
@@ -165,9 +200,7 @@ export default function TenantDetailScreen() {
             </View>
             <View style={styles.cardHeaderInfo}>
               <Text style={styles.tenantName}>{tenant.name}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(tenant.status) }]}>
-                <Text style={styles.statusText}>{getStatusText(tenant.status)}</Text>
-              </View>
+              <StatusBadge status={tenant.status} type="tenant" />
             </View>
           </View>
 
@@ -193,97 +226,138 @@ export default function TenantDetailScreen() {
           </View>
         </View>
 
-        {/* Property Info */}
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <Home size={24} color="#4D7EA8" />
-            <Text style={styles.sectionTitle}>Property</Text>
-          </View>
+        {/* Contract Info */}
+        {tenant.current_contract_id ? (
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <Home size={24} color="#4D7EA8" />
+              <Text style={styles.sectionTitle}>{t('tenants.detail.contractSection')}</Text>
+            </View>
 
-          <View style={styles.propertyInfo}>
-            <Text style={styles.propertyTitle}>{tenant.listing_id.title}</Text>
-            <View style={styles.infoRow}>
-              <MapPin size={16} color="#828489" />
-              <Text style={styles.propertyAddress}>
-                {tenant.listing_id.address}, {tenant.listing_id.suburb}
+            {tenant.current_contract_id.listing_id && (
+              <View style={styles.propertyInfo}>
+                <Text style={styles.propertyTitle}>{tenant.current_contract_id.listing_id.title}</Text>
+                <View style={styles.infoRow}>
+                  <MapPin size={16} color="#828489" />
+                  <Text style={styles.propertyAddress}>
+                    {tenant.current_contract_id.listing_id.address}, {tenant.current_contract_id.listing_id.suburb}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        ) : (
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <Home size={24} color="#828489" />
+              <Text style={styles.sectionTitle}>{t('tenants.detail.contractSection')}</Text>
+            </View>
+            <View style={styles.noPropertyContainer}>
+              <Text style={styles.noPropertyText}>
+                {t('tenants.detail.noContract')}
               </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Lease Details */}
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <Calendar size={24} color="#4D7EA8" />
-            <Text style={styles.sectionTitle}>Lease Information</Text>
-          </View>
-
-          <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Start Date</Text>
-              <Text style={styles.detailValue}>{formatDate(tenant.lease_start)}</Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>End Date</Text>
-              <Text style={styles.detailValue}>{formatDate(tenant.lease_end)}</Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Duration</Text>
-              <Text style={styles.detailValue}>{tenant.lease_duration_weeks} weeks</Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Days Remaining</Text>
-              <Text style={[
-                styles.detailValue,
-                tenant.days_remaining < 30 && styles.warningText
-              ]}>
-                {tenant.days_remaining} days
+              <Text style={styles.noPropertySubtext}>
+                {t('tenants.detail.noContractMessage')}
               </Text>
+              {canEdit && (
+                <TouchableOpacity
+                  style={styles.assignButton}
+                  onPress={() => router.push({
+                    pathname: '/contract/create',
+                    params: { tenant_id: tenant._id }
+                  })}
+                >
+                  <Text style={styles.assignButtonText}>Asignar Contrato</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
-        </View>
+        )}
+
+        {/* Contract Details */}
+        {tenant.current_contract_id && (
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <Calendar size={24} color="#4D7EA8" />
+              <Text style={styles.sectionTitle}>Detalles del Contrato</Text>
+            </View>
+
+            <View style={styles.detailsGrid}>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Fecha de Inicio</Text>
+                <Text style={styles.detailValue}>{formatDate(tenant.current_contract_id.start_date)}</Text>
+              </View>
+
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Fecha de Fin</Text>
+                <Text style={styles.detailValue}>{formatDate(tenant.current_contract_id.end_date)}</Text>
+              </View>
+
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Estado</Text>
+                <StatusBadge status={tenant.current_contract_id.status} type="contract" />
+              </View>
+
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Días Restantes</Text>
+                <Text style={[
+                  styles.detailValue,
+                  tenant.current_contract_id.days_remaining < 30 && styles.warningText
+                ]}>
+                  {tenant.current_contract_id.days_remaining} días
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Financial Details */}
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <DollarSign size={24} color="#7BA89E" />
-            <Text style={styles.sectionTitle}>Financial Details</Text>
+        {tenant.current_contract_id && (
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <DollarSign size={24} color="#7BA89E" />
+              <Text style={styles.sectionTitle}>Detalles Financieros</Text>
+            </View>
+
+            <View style={styles.detailsGrid}>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Renta Semanal</Text>
+                <Text style={styles.detailValue}>${tenant.current_contract_id.weekly_rent}</Text>
+              </View>
+
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Depósito (Bond)</Text>
+                <Text style={styles.detailValue}>${tenant.current_contract_id.bond_amount}</Text>
+              </View>
+
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Bond Pagado</Text>
+                <Text style={styles.detailValue}>
+                  {tenant.current_contract_id.bond_paid ? 'Sí' : 'No'}
+                </Text>
+              </View>
+
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Frecuencia de Pago</Text>
+                <Text style={styles.detailValue}>
+                  {t(`tenants.paymentFrequency.${tenant.current_contract_id.payment_frequency}`)}
+                </Text>
+              </View>
+            </View>
           </View>
-
-          <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Weekly Rent</Text>
-              <Text style={styles.detailValue}>${tenant.weekly_rent}</Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Bond Paid</Text>
-              <Text style={styles.detailValue}>${tenant.bond_paid}</Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Payment Method</Text>
-              <Text style={styles.detailValue}>
-                {tenant.payment_method.replace('_', ' ').toUpperCase()}
-              </Text>
-            </View>
-          </View>
-        </View>
+        )}
 
         {/* Emergency Contact */}
         {tenant.emergency_contact && (
           <View style={styles.card}>
             <View style={styles.sectionHeader}>
               <AlertCircle size={24} color="#E89E8C" />
-              <Text style={styles.sectionTitle}>Emergency Contact</Text>
+              <Text style={styles.sectionTitle}>Contacto de Emergencia</Text>
             </View>
 
             <View style={styles.emergencyContact}>
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Name</Text>
+                <Text style={styles.detailLabel}>Nombre</Text>
                 <Text style={styles.detailValue}>{tenant.emergency_contact.name}</Text>
               </View>
 
@@ -296,7 +370,7 @@ export default function TenantDetailScreen() {
               </TouchableOpacity>
 
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Relationship</Text>
+                <Text style={styles.detailLabel}>Relación</Text>
                 <Text style={styles.detailValue}>{tenant.emergency_contact.relationship}</Text>
               </View>
             </View>
@@ -308,9 +382,30 @@ export default function TenantDetailScreen() {
           <View style={styles.card}>
             <View style={styles.sectionHeader}>
               <FileText size={24} color="#828489" />
-              <Text style={styles.sectionTitle}>Notes</Text>
+              <Text style={styles.sectionTitle}>Notas</Text>
             </View>
             <Text style={styles.notesText}>{tenant.notes}</Text>
+          </View>
+        )}
+
+        {/* Unlink Action */}
+        {canEdit && tenant.current_contract_id && (
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <AlertCircle size={24} color="#E89E8C" />
+              <Text style={styles.sectionTitle}>{t('tenants.detail.actionsSection')}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.unlinkButton}
+              onPress={handleUnlink}
+            >
+              <Text style={styles.unlinkButtonText}>
+                {t('tenants.actions.unlink')}
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.unlinkDescription}>
+              {t('tenants.unlink.confirmMessage')}
+            </Text>
           </View>
         )}
 
@@ -480,5 +575,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#272932',
     lineHeight: 20,
+  },
+  unlinkButton: {
+    backgroundColor: '#E89E8C',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  unlinkButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  unlinkDescription: {
+    fontSize: 13,
+    color: '#828489',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  noPropertyContainer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  noPropertyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  noPropertySubtext: {
+    fontSize: 14,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  assignButton: {
+    backgroundColor: '#4D7EA8',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  assignButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

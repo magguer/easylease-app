@@ -15,24 +15,20 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from '@/hooks/useTranslation';
 import { api } from '@/lib/api';
 import DetailHeader from '@/components/ui/DetailHeader';
+import ImageUpload, { uploadLocalImages } from '@/components/ui/ImageUpload';
 import { Image as ImageIcon } from '@tamagui/lucide-icons';
 
 interface FormData {
   title: string;
-  price_per_week: string;
-  bond: string;
-  bills_included: boolean;
   address: string;
   suburb: string;
   room_type: string;
-  available_from: string;
-  min_term_weeks: string;
   description: string;
   parking: boolean;
   internet: boolean;
   furnished: boolean;
   pets_allowed: boolean;
-  status: string;
+  images: string[];
 }
 
 export default function EditListingScreen() {
@@ -44,20 +40,15 @@ export default function EditListingScreen() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: '',
-    price_per_week: '',
-    bond: '',
-    bills_included: true,
     address: '',
     suburb: '',
     room_type: 'single',
-    available_from: '',
-    min_term_weeks: '12',
     description: '',
     parking: false,
     internet: false,
     furnished: false,
     pets_allowed: false,
-    status: 'draft',
+    images: [],
   });
 
   useEffect(() => {
@@ -71,28 +62,21 @@ export default function EditListingScreen() {
 
       setFormData({
         title: listing.title || '',
-        price_per_week: listing.price_per_week?.toString() || '',
-        bond: listing.bond?.toString() || '',
-        bills_included: listing.bills_included ?? true,
         address: listing.address || '',
         suburb: listing.suburb || '',
         room_type: listing.room_type || 'single',
-        available_from: listing.available_from
-          ? new Date(listing.available_from).toISOString().split('T')[0]
-          : '',
-        min_term_weeks: listing.min_term_weeks?.toString() || '12',
         description: listing.description || '',
         parking: listing.house_features?.includes('parking') || false,
         internet: listing.house_features?.includes('internet') || false,
         furnished: listing.house_features?.includes('furnished') || false,
         pets_allowed: listing.house_features?.includes('pets_allowed') || false,
-        status: listing.status || 'draft',
+        images: listing.images || [],
       });
     } catch (error: any) {
       console.error('Error loading listing:', error);
       Alert.alert(
         t('common.error'),
-        error.response?.data?.error || 'Failed to load property details'
+        error.response?.data?.error || t('listings.form.loadError')
       );
       router.back();
     } finally {
@@ -106,15 +90,11 @@ export default function EditListingScreen() {
 
   const validateForm = (): boolean => {
     if (!formData.title.trim()) {
-      Alert.alert(t('common.error'), 'Title is required');
-      return false;
-    }
-    if (!formData.price_per_week || parseFloat(formData.price_per_week) <= 0) {
-      Alert.alert(t('common.error'), 'Valid price is required');
+      Alert.alert(t('common.error'), t('listings.form.titleRequired'));
       return false;
     }
     if (!formData.address.trim()) {
-      Alert.alert(t('common.error'), 'Address is required');
+      Alert.alert(t('common.error'), t('listings.form.addressRequired'));
       return false;
     }
     return true;
@@ -126,29 +106,40 @@ export default function EditListingScreen() {
     try {
       setSaving(true);
 
+      // Upload any new local images first
+      let uploadedImageUrls = formData.images;
+      const hasLocalImages = formData.images.some(uri => !uri.startsWith('http'));
+      if (hasLocalImages) {
+        try {
+          uploadedImageUrls = await uploadLocalImages(formData.images);
+        } catch (uploadError) {
+          Alert.alert(
+            t('common.error'),
+            'Failed to upload images. Please try again.'
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       const payload = {
         title: formData.title.trim(),
-        price_per_week: parseFloat(formData.price_per_week),
-        bond: formData.bond ? parseFloat(formData.bond) : 0,
-        bills_included: formData.bills_included,
         address: formData.address.trim(),
         suburb: formData.suburb.trim() || undefined,
         room_type: formData.room_type,
-        available_from: formData.available_from || new Date().toISOString(),
-        min_term_weeks: parseInt(formData.min_term_weeks) || 12,
         house_features: [
           formData.parking && 'parking',
           formData.internet && 'internet',
           formData.furnished && 'furnished',
           formData.pets_allowed && 'pets_allowed',
         ].filter(Boolean),
-        status: formData.status,
+        images: uploadedImageUrls,
       };
 
       await api.listings.update(id, payload);
       Alert.alert(
         t('common.success'),
-        'Listing updated successfully',
+        t('listings.messages.updateSuccess'),
         [
           {
             text: 'OK',
@@ -160,7 +151,7 @@ export default function EditListingScreen() {
       console.error('Error updating listing:', error);
       Alert.alert(
         t('common.error'),
-        error.response?.data?.error || 'Failed to update listing'
+        error.response?.data?.error || t('listings.form.updateError')
       );
     } finally {
       setSaving(false);
@@ -170,7 +161,7 @@ export default function EditListingScreen() {
   const handleDelete = () => {
     Alert.alert(
       t('common.confirm'),
-      'Are you sure you want to delete this listing? This action cannot be undone.',
+      t('listings.form.deleteConfirmMessage'),
       [
         {
           text: t('common.cancel'),
@@ -184,7 +175,7 @@ export default function EditListingScreen() {
               await api.listings.delete(id);
               Alert.alert(
                 t('common.success'),
-                'Listing deleted successfully',
+                t('listings.messages.deleteSuccess'),
                 [
                   {
                     text: 'OK',
@@ -196,7 +187,7 @@ export default function EditListingScreen() {
               console.error('Error deleting listing:', error);
               Alert.alert(
                 t('common.error'),
-                error.response?.data?.error || 'Failed to delete listing'
+                error.response?.data?.error || t('listings.form.deleteError')
               );
             }
           },
@@ -210,7 +201,7 @@ export default function EditListingScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <DetailHeader title={t('listings.editListing')} showEdit={false} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4D7EA8" />
+          <ActivityIndicator size="large" color="#5B9AA8" />
         </View>
       </View>
     );
@@ -226,21 +217,21 @@ export default function EditListingScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Basic Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+          <Text style={styles.sectionTitle}>{t('listings.form.basicInformation')}</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Title *</Text>
+            <Text style={styles.label}>{t('listings.form.title')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.title}
               onChangeText={(value) => updateField('title', value)}
-              placeholder="e.g., Cozy room in shared house"
+              placeholder={t('listings.form.titlePlaceholder')}
               placeholderTextColor="#94A3B8"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Room Type *</Text>
+            <Text style={styles.label}>{t('listings.form.roomType')} *</Text>
             <View style={styles.radioGroup}>
               {['single', 'double', 'master'].map((type) => (
                 <TouchableOpacity
@@ -257,141 +248,47 @@ export default function EditListingScreen() {
                       formData.room_type === type && styles.radioTextActive,
                     ]}
                   >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {t(`listings.form.${type}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Status *</Text>
-            <View style={styles.radioGroup}>
-              {['draft', 'published', 'reserved', 'rented'].map((status) => (
-                <TouchableOpacity
-                  key={status}
-                  style={[
-                    styles.radioButton,
-                    formData.status === status && styles.radioButtonActive,
-                  ]}
-                  onPress={() => updateField('status', status)}
-                >
-                  <Text
-                    style={[
-                      styles.radioText,
-                      formData.status === status && styles.radioTextActive,
-                    ]}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Pricing */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pricing</Text>
-
-          <View style={styles.row}>
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>Price per Week * ($)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.price_per_week}
-                onChangeText={(value) => updateField('price_per_week', value)}
-                placeholder="0"
-                placeholderTextColor="#94A3B8"
-                keyboardType="decimal-pad"
-              />
-            </View>
-
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>Bond ($)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.bond}
-                onChangeText={(value) => updateField('bond', value)}
-                placeholder="0"
-                placeholderTextColor="#94A3B8"
-                keyboardType="decimal-pad"
-              />
-            </View>
-          </View>
-
-          <View style={styles.switchField}>
-            <Text style={styles.label}>Bills Included</Text>
-            <Switch
-              value={formData.bills_included}
-              onValueChange={(value) => updateField('bills_included', value)}
-              trackColor={{ false: '#E5E7EB', true: '#7BA89E' }}
-              thumbColor="#FFF"
-            />
           </View>
         </View>
 
         {/* Location */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={styles.sectionTitle}>{t('listings.form.location')}</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Address *</Text>
+            <Text style={styles.label}>{t('listings.form.address')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.address}
               onChangeText={(value) => updateField('address', value)}
-              placeholder="123 Main St"
+              placeholder={t('listings.form.addressPlaceholder')}
               placeholderTextColor="#94A3B8"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Suburb</Text>
+            <Text style={styles.label}>{t('listings.form.suburb')}</Text>
             <TextInput
               style={styles.input}
               value={formData.suburb}
               onChangeText={(value) => updateField('suburb', value)}
-              placeholder="Brisbane CBD"
+              placeholder={t('listings.form.suburbPlaceholder')}
               placeholderTextColor="#94A3B8"
-            />
-          </View>
-        </View>
-
-        {/* Terms */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lease Terms</Text>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Available From</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.available_from}
-              onChangeText={(value) => updateField('available_from', value)}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#94A3B8"
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Minimum Term (weeks)</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.min_term_weeks}
-              onChangeText={(value) => updateField('min_term_weeks', value)}
-              placeholder="12"
-              placeholderTextColor="#94A3B8"
-              keyboardType="number-pad"
             />
           </View>
         </View>
 
         {/* Amenities */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Amenities</Text>
+          <Text style={styles.sectionTitle}>{t('listings.form.amenities')}</Text>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Parking</Text>
+            <Text style={styles.label}>{t('listings.form.parking')}</Text>
             <Switch
               value={formData.parking}
               onValueChange={(value) => updateField('parking', value)}
@@ -401,7 +298,7 @@ export default function EditListingScreen() {
           </View>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Internet</Text>
+            <Text style={styles.label}>{t('listings.form.internet')}</Text>
             <Switch
               value={formData.internet}
               onValueChange={(value) => updateField('internet', value)}
@@ -411,7 +308,7 @@ export default function EditListingScreen() {
           </View>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Furnished</Text>
+            <Text style={styles.label}>{t('listings.form.furnished')}</Text>
             <Switch
               value={formData.furnished}
               onValueChange={(value) => updateField('furnished', value)}
@@ -421,7 +318,7 @@ export default function EditListingScreen() {
           </View>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Pets Allowed</Text>
+            <Text style={styles.label}>{t('listings.form.petsAllowed')}</Text>
             <Switch
               value={formData.pets_allowed}
               onValueChange={(value) => updateField('pets_allowed', value)}
@@ -431,29 +328,27 @@ export default function EditListingScreen() {
           </View>
         </View>
 
-        {/* TODO: Images Upload Section */}
+        {/* Images Upload Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Images</Text>
-          <View style={styles.imagePlaceholder}>
-            <ImageIcon size={48} color="#94A3B8" />
-            <Text style={styles.imagePlaceholderText}>
-              Image upload coming soon
-            </Text>
-          </View>
+          <Text style={styles.sectionTitle}>{t('listings.form.images')}</Text>
+          <ImageUpload
+            images={formData.images}
+            onImagesChange={(images) => updateField('images', images)}
+          />
         </View>
 
         {/* Delete Section */}
         <View style={styles.dangerSection}>
-          <Text style={styles.dangerTitle}>Danger Zone</Text>
+          <Text style={styles.dangerTitle}>{t('listings.form.dangerZone')}</Text>
           <Text style={styles.dangerDescription}>
-            Deleting this listing is permanent and cannot be undone.
+            {t('listings.form.dangerZoneDescription')}
           </Text>
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={handleDelete}
             disabled={saving}
           >
-            <Text style={styles.deleteButtonText}>Delete Listing</Text>
+            <Text style={styles.deleteButtonText}>{t('listings.form.deleteListing')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -467,7 +362,7 @@ export default function EditListingScreen() {
           onPress={() => router.back()}
           disabled={saving}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.cancelButtonText}>{t('listings.form.cancel')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
@@ -477,7 +372,7 @@ export default function EditListingScreen() {
           {saving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.saveButtonText}>Save Changes</Text>
+            <Text style={styles.saveButtonText}>{t('listings.form.saveChanges')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -551,8 +446,8 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   radioButtonActive: {
-    backgroundColor: '#4D7EA8',
-    borderColor: '#4D7EA8',
+    backgroundColor: '#5B9AA8',
+    borderColor: '#5B9AA8',
   },
   radioText: {
     fontSize: 14,
@@ -641,7 +536,7 @@ const styles = StyleSheet.create({
     flex: 2,
     paddingVertical: 14,
     borderRadius: 8,
-    backgroundColor: '#4D7EA8',
+    backgroundColor: '#5B9AA8',
     alignItems: 'center',
     justifyContent: 'center',
   },

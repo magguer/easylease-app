@@ -13,21 +13,30 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from '@/hooks/useTranslation';
 import { api } from '@/lib/api';
 import { Building2, MapPin, DollarSign, Calendar, Home } from '@tamagui/lucide-icons';
+import ListHeader from '@/components/ui/ListHeader';
+import EmptyState from '@/components/ui/EmptyState';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 interface Listing {
   _id: string;
   title: string;
-  price_per_week: number;
   address: string;
   suburb?: string;
   room_type?: string;
-  status: string;
   images: string[];
-  available_from?: string;
-  bond?: number;
-  bills_included?: boolean;
   preferred_tenants?: string[];
   house_features?: string[];
+  active_contract?: {
+    _id: string;
+    status: string;
+    tenant_id?: {
+      name: string;
+      email: string;
+    };
+    weekly_rent: number;
+    start_date: string;
+    end_date: string;
+  };
 }
 
 export default function ListingsScreen() {
@@ -59,31 +68,6 @@ export default function ListingsScreen() {
     loadListings();
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published':
-        return '#7BA89E';
-      case 'draft':
-        return '#828489';
-      case 'reserved':
-        return '#E89E8C';
-      case 'rented':
-        return '#9E90A2';
-      default:
-        return '#828489';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      published: 'Publicado',
-      draft: 'Borrador',
-      reserved: 'Reservado',
-      rented: 'Alquilado',
-    };
-    return statusMap[status] || status;
-  };
-
   const getRoomTypeLabel = (roomType?: string) => {
     if (!roomType) return '';
     const typeMap: { [key: string]: string } = {
@@ -100,7 +84,26 @@ export default function ListingsScreen() {
     return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  const renderListing = ({ item }: { item: Listing }) => (
+  const getListingStatus = (listing: Listing): { status: string; type: 'listing' | 'contract' } => {
+    // Si tiene un contrato activo, mostrar el estado del contrato
+    if (listing.active_contract) {
+      return {
+        status: listing.active_contract.status,
+        type: 'contract'
+      };
+    }
+    
+    // Si no tiene contrato activo, mostrar "available" (disponible)
+    return {
+      status: 'available',
+      type: 'listing'
+    };
+  };
+
+  const renderListing = ({ item }: { item: Listing }) => {
+    const { status, type } = getListingStatus(item);
+    
+    return (
     <TouchableOpacity 
       style={styles.listingCard}
       onPress={() => router.push(`/listing/${item._id}`)}
@@ -123,9 +126,7 @@ export default function ListingsScreen() {
           <Text style={styles.listingTitle} numberOfLines={2}>
             {item.title}
           </Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
-          </View>
+          <StatusBadge status={status} type={type} />
         </View>
 
         <View style={styles.listingDetails}>
@@ -136,45 +137,17 @@ export default function ListingsScreen() {
             </Text>
           </View>
           
-          <View style={styles.detailRow}>
-            <DollarSign size={16} color="#4D7EA8" />
-            <Text style={styles.priceText}>
-              ${item.price_per_week}/semana
-            </Text>
-            {item.bills_included && (
-              <View style={styles.billsBadge}>
-                <Text style={styles.billsText}>+ servicios</Text>
-              </View>
-            )}
-          </View>
-
           {item.room_type && (
             <View style={styles.detailRow}>
               <Building2 size={16} color="#828489" />
               <Text style={styles.detailText}>{getRoomTypeLabel(item.room_type)}</Text>
             </View>
           )}
-
-          {item.available_from && (
-            <View style={styles.detailRow}>
-              <Calendar size={16} color="#7BA89E" />
-              <Text style={styles.detailText}>
-                Disponible desde {formatDate(item.available_from)}
-              </Text>
-            </View>
-          )}
         </View>
-
-        {item.bond !== undefined && (
-          <View style={styles.listingFooter}>
-            <Text style={styles.footerText}>
-              Depósito: ${item.bond}
-            </Text>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
+  };
 
   if (loading) {
     return (
@@ -186,20 +159,14 @@ export default function ListingsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>{t('listings.title')}</Text>
-          <Text style={styles.count}>
-            {listings.length} {listings.length === 1 ? t('listings.count_one') : t('listings.count_other')}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => router.push('/listing/create')}
-        >
-          <Text style={styles.createButtonText}>+ {t('common.add')}</Text>
-        </TouchableOpacity>
-      </View>
+      <ListHeader
+        title={t('listings.title')}
+        count={listings.length}
+        countLabel={listings.length === 1 ? t('listings.count_one') : t('listings.count_other')}
+        buttonText={t('common.addNew')}
+        onButtonPress={() => router.push('/listing/create')}
+        buttonColor="#5B9AA8"
+      />
 
       <FlatList
         data={listings}
@@ -210,11 +177,11 @@ export default function ListingsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4D7EA8" />
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Building2 size={64} color="#E0E0E0" />
-            <Text style={styles.emptyText}>{t('listings.noListings')}</Text>
-            <Text style={styles.emptySubtext}>Desliza hacia abajo para recargar</Text>
-          </View>
+          <EmptyState
+            icon={Building2}
+            title={t('listings.noListings')}
+            subtitle={t('common.pullToRefresh')}
+          />
         }
       />
     </View>
@@ -231,37 +198,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#272932',
-    marginBottom: 4,
-  },
-  count: {
-    fontSize: 14,
-    color: '#828489',
-  },
-  createButton: {
-    backgroundColor: '#4D7EA8',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  createButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
   },
   list: {
     padding: 16,
@@ -351,21 +287,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#828489',
     fontWeight: '500',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 64,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#828489',
-    marginTop: 16,
-    fontWeight: '600',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#B0B0B0',
-    marginTop: 8,
   },
 });

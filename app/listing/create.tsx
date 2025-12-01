@@ -15,26 +15,19 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from '@/hooks/useTranslation';
 import { api } from '@/lib/api';
 import DetailHeader from '@/components/ui/DetailHeader';
-import ImageUpload from '@/components/ui/ImageUpload';
-import DatePickerModal from '@/components/ui/DatePickerModal';
-import { Home, DollarSign, MapPin, Calendar, Image as ImageIcon } from '@tamagui/lucide-icons';
+import ImageUpload, { uploadLocalImages } from '@/components/ui/ImageUpload';
+import { Home, MapPin, Image as ImageIcon } from '@tamagui/lucide-icons';
 
 interface FormData {
   title: string;
-  price_per_week: string;
-  bond: string;
-  bills_included: boolean;
   address: string;
   suburb: string;
   room_type: string;
-  available_from: string;
-  min_term_weeks: string;
   description: string;
   parking: boolean;
   internet: boolean;
   furnished: boolean;
   pets_allowed: boolean;
-  status: string;
   images: string[];
 }
 
@@ -43,23 +36,16 @@ export default function CreateListingScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: '',
-    price_per_week: '',
-    bond: '',
-    bills_included: true,
     address: '',
     suburb: '',
     room_type: 'single',
-    available_from: '',
-    min_term_weeks: '12',
     description: '',
     parking: false,
     internet: false,
     furnished: false,
     pets_allowed: false,
-    status: 'draft',
     images: [],
   });
 
@@ -69,15 +55,12 @@ export default function CreateListingScreen() {
 
   const validateForm = (): boolean => {
     if (!formData.title.trim()) {
-      Alert.alert(t('common.error'), 'Title is required');
+      Alert.alert(t('common.error'), t('listings.form.titleRequired'));
       return false;
     }
-    if (!formData.price_per_week || parseFloat(formData.price_per_week) <= 0) {
-      Alert.alert(t('common.error'), 'Valid price is required');
-      return false;
-    }
+    // price_per_week is now optional - will come from contract
     if (!formData.address.trim()) {
-      Alert.alert(t('common.error'), 'Address is required');
+      Alert.alert(t('common.error'), t('listings.form.addressRequired'));
       return false;
     }
     return true;
@@ -89,30 +72,39 @@ export default function CreateListingScreen() {
     try {
       setLoading(true);
 
+      // Upload images first if there are any local images
+      let uploadedImageUrls = formData.images;
+      if (formData.images.length > 0) {
+        try {
+          uploadedImageUrls = await uploadLocalImages(formData.images);
+        } catch (uploadError) {
+          Alert.alert(
+            t('common.error'),
+            'Failed to upload images. Please try again.'
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
       const payload = {
         title: formData.title.trim(),
-        price_per_week: parseFloat(formData.price_per_week),
-        bond: formData.bond ? parseFloat(formData.bond) : 0,
-        bills_included: formData.bills_included,
         address: formData.address.trim(),
         suburb: formData.suburb.trim() || undefined,
         room_type: formData.room_type,
-        available_from: formData.available_from || new Date().toISOString(),
-        min_term_weeks: parseInt(formData.min_term_weeks) || 12,
         house_features: [
           formData.parking && 'parking',
           formData.internet && 'internet',
           formData.furnished && 'furnished',
           formData.pets_allowed && 'pets_allowed',
         ].filter(Boolean),
-        status: formData.status,
-        images: formData.images,
+        images: uploadedImageUrls,
       };
 
       const response = await api.listings.create(payload);
       Alert.alert(
         t('common.success'),
-        'Listing created successfully',
+        t('listings.messages.createSuccess'),
         [
           {
             text: 'OK',
@@ -124,7 +116,7 @@ export default function CreateListingScreen() {
       console.error('Error creating listing:', error);
       Alert.alert(
         t('common.error'),
-        error.response?.data?.error || 'Failed to create listing'
+        error.response?.data?.error || t('common.error')
       );
     } finally {
       setLoading(false);
@@ -134,28 +126,28 @@ export default function CreateListingScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <DetailHeader
-        title={t('listings.createListing')}
+        title={t('listings.addListing')}
         showEdit={false}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Basic Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+          <Text style={styles.sectionTitle}>{t('listings.form.basicInformation')}</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Title *</Text>
+            <Text style={styles.label}>{t('listings.form.title')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.title}
               onChangeText={(value) => updateField('title', value)}
-              placeholder="e.g., Cozy room in shared house"
+              placeholder={t('listings.form.titlePlaceholder')}
               placeholderTextColor="#94A3B8"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Room Type *</Text>
+            <Text style={styles.label}>{t('listings.form.roomType')} *</Text>
             <View style={styles.radioGroup}>
               {['single', 'double', 'master'].map((type) => (
                 <TouchableOpacity
@@ -172,150 +164,47 @@ export default function CreateListingScreen() {
                       formData.room_type === type && styles.radioTextActive,
                     ]}
                   >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {t(`listings.form.${type}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Status *</Text>
-            <View style={styles.radioGroup}>
-              {['draft', 'published'].map((status) => (
-                <TouchableOpacity
-                  key={status}
-                  style={[
-                    styles.radioButton,
-                    formData.status === status && styles.radioButtonActive,
-                  ]}
-                  onPress={() => updateField('status', status)}
-                >
-                  <Text
-                    style={[
-                      styles.radioText,
-                      formData.status === status && styles.radioTextActive,
-                    ]}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Pricing */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pricing</Text>
-
-          <View style={styles.row}>
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>Price per Week * ($)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.price_per_week}
-                onChangeText={(value) => updateField('price_per_week', value)}
-                placeholder="0"
-                placeholderTextColor="#94A3B8"
-                keyboardType="decimal-pad"
-              />
-            </View>
-
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>Bond ($)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.bond}
-                onChangeText={(value) => updateField('bond', value)}
-                placeholder="0"
-                placeholderTextColor="#94A3B8"
-                keyboardType="decimal-pad"
-              />
-            </View>
-          </View>
-
-          <View style={styles.switchField}>
-            <Text style={styles.label}>Bills Included</Text>
-            <Switch
-              value={formData.bills_included}
-              onValueChange={(value) => updateField('bills_included', value)}
-              trackColor={{ false: '#E5E7EB', true: '#7BA89E' }}
-              thumbColor="#FFF"
-            />
           </View>
         </View>
 
         {/* Location */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={styles.sectionTitle}>{t('listings.form.location')}</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Address *</Text>
+            <Text style={styles.label}>{t('listings.form.address')} *</Text>
             <TextInput
               style={styles.input}
               value={formData.address}
               onChangeText={(value) => updateField('address', value)}
-              placeholder="123 Main St"
+              placeholder={t('listings.form.addressPlaceholder')}
               placeholderTextColor="#94A3B8"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Suburb</Text>
+            <Text style={styles.label}>{t('listings.form.suburb')}</Text>
             <TextInput
               style={styles.input}
               value={formData.suburb}
               onChangeText={(value) => updateField('suburb', value)}
-              placeholder="Brisbane CBD"
+              placeholder={t('listings.form.suburbPlaceholder')}
               placeholderTextColor="#94A3B8"
-            />
-          </View>
-        </View>
-
-        {/* Terms */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lease Terms</Text>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Available From</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={{ color: formData.available_from ? '#272932' : '#94A3B8' }}>
-                {formData.available_from || 'YYYY-MM-DD'}
-              </Text>
-            </TouchableOpacity>
-            <DatePickerModal
-              visible={showDatePicker}
-              onClose={() => setShowDatePicker(false)}
-              onSelect={(date) => updateField('available_from', date)}
-              initialDate={formData.available_from}
-              minimumDate={new Date().toISOString().split('T')[0]}
-              title="Select Available Date"
-            />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Minimum Term (weeks)</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.min_term_weeks}
-              onChangeText={(value) => updateField('min_term_weeks', value)}
-              placeholder="12"
-              placeholderTextColor="#94A3B8"
-              keyboardType="number-pad"
             />
           </View>
         </View>
 
         {/* Amenities */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Amenities</Text>
+          <Text style={styles.sectionTitle}>{t('listings.form.amenities')}</Text>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Parking</Text>
+            <Text style={styles.label}>{t('listings.form.parking')}</Text>
             <Switch
               value={formData.parking}
               onValueChange={(value) => updateField('parking', value)}
@@ -325,7 +214,7 @@ export default function CreateListingScreen() {
           </View>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Internet</Text>
+            <Text style={styles.label}>{t('listings.form.internet')}</Text>
             <Switch
               value={formData.internet}
               onValueChange={(value) => updateField('internet', value)}
@@ -335,7 +224,7 @@ export default function CreateListingScreen() {
           </View>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Furnished</Text>
+            <Text style={styles.label}>{t('listings.form.furnished')}</Text>
             <Switch
               value={formData.furnished}
               onValueChange={(value) => updateField('furnished', value)}
@@ -345,7 +234,7 @@ export default function CreateListingScreen() {
           </View>
 
           <View style={styles.switchField}>
-            <Text style={styles.label}>Pets Allowed</Text>
+            <Text style={styles.label}>{t('listings.form.petsAllowed')}</Text>
             <Switch
               value={formData.pets_allowed}
               onValueChange={(value) => updateField('pets_allowed', value)}
@@ -355,9 +244,9 @@ export default function CreateListingScreen() {
           </View>
         </View>
 
-        {/* TODO: Images Upload Section */}
+        {/* Images Upload Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Images</Text>
+          <Text style={styles.sectionTitle}>{t('listings.form.images')}</Text>
           <ImageUpload
             images={formData.images}
             onImagesChange={(images) => updateField('images', images)}
@@ -374,7 +263,7 @@ export default function CreateListingScreen() {
           onPress={() => router.back()}
           disabled={loading}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.cancelButtonText}>{t('listings.form.cancel')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.saveButton, loading && styles.saveButtonDisabled]}
@@ -384,7 +273,7 @@ export default function CreateListingScreen() {
           {loading ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.saveButtonText}>Create Listing</Text>
+            <Text style={styles.saveButtonText}>{t('listings.form.createListing')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -427,6 +316,12 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginBottom: 8,
   },
+  fieldHint: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
   input: {
     backgroundColor: '#F8F9FA',
     borderWidth: 1,
@@ -452,8 +347,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   radioButtonActive: {
-    backgroundColor: '#4D7EA8',
-    borderColor: '#4D7EA8',
+    backgroundColor: '#5B9AA8',
+    borderColor: '#5B9AA8',
   },
   radioText: {
     fontSize: 14,
@@ -512,7 +407,7 @@ const styles = StyleSheet.create({
     flex: 2,
     paddingVertical: 14,
     borderRadius: 8,
-    backgroundColor: '#4D7EA8',
+    backgroundColor: '#5B9AA8',
     alignItems: 'center',
     justifyContent: 'center',
   },

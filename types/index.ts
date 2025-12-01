@@ -8,7 +8,7 @@ export interface User {
   name: string;
   role: UserRole;
   phone?: string;
-  partner_id?: string;
+  owner_id?: string;
   tenant_id?: string;
   isActive?: boolean;
   createdAt?: string;
@@ -105,53 +105,47 @@ export interface CreatePartnerData {
 
 // Dashboard
 export interface DashboardStats {
-  // Manager stats
-  listings?: {
-    total: number;
-    active: number;
-    rented?: number;
-  };
-  leads?: {
-    total: number;
-    new?: number;
-  };
-  partners?: {
-    total: number;
-  };
-  tenants?: {
-    total: number;
-    active: number;
-    ending_soon?: number;
-  };
-  
-  // Owner stats
-  financial?: {
-    monthly_income: number;
-    yearly_income?: number;
-  };
-  
-  // Tenant stats (for tenant role)
-  tenant?: {
-    name: string;
-    listing_id: any;
-    lease_start: string;
-    lease_end: string;
-    weekly_rent: number;
-    bond_paid: number;
-    status: string;
-    days_remaining?: number;
-    next_payment_date?: string;
-  };
-  
-  // Legacy fields (keep for backwards compatibility)
+  // Manager stats (flattened from API response)
   totalListings?: number;
   activeListings?: number;
   totalLeads?: number;
   newLeads?: number;
-  totalPartners?: number;
+  totalOwners?: number;
   totalTenants?: number;
   activeTenants?: number;
   tenantsEndingSoon?: number;
+
+  // Nested structure (API response)
+  stats?: {
+    listings?: {
+      total: number;
+      active: number;
+    };
+    leads?: {
+      total: number;
+      new: number;
+    };
+    owners?: {
+      total: number;
+      active: number;
+    };
+    tenants?: {
+      total: number;
+      active: number;
+      ending_soon: number;
+    };
+    income?: {
+      monthly: number;
+    };
+    // Tenant specific
+    tenant?: any;
+    property?: any;
+    nextPayment?: any;
+  };
+  recentLeads?: any[];
+  recentListings?: any[];
+  recentTenants?: any[];
+  tenantData?: any;
 }
 
 // Tenant

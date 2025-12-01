@@ -1,13 +1,9 @@
 {
   "expo": {
-    "name": "easylease-admin-app",
+    "name": "EasyLease Admin",
     "slug": "easylease-admin-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "scheme": "easylease-admin",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,7 +11,24 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.easylease.admin"
+      "bundleIdentifier": "com.easylease.admin",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "EasyLease necesita acceso a tu cámara para tomar fotos de propiedades y documentos.",
+        "NSPhotoLibraryUsageDescription": "EasyLease necesita acceso a tus fotos para seleccionar imágenes de propiedades.",
+        "NSPhotoLibraryAddUsageDescription": "EasyLease necesita permiso para guardar fotos de propiedades en tu galería.",
+        "NSMicrophoneUsageDescription": "EasyLease necesita acceso al micrófono para grabar videos de propiedades."
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,6 +36,14 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.easylease.admin",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -30,10 +51,32 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite a EasyLease tomar fotos de propiedades."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite a EasyLease acceder a tus fotos para seleccionar imágenes de propiedades."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "https://easylease-api.vercel.app/api",
+      "router": {},
+      "eas": {
+        "projectId": "b41dd17d-b2fa-4da7-9f00-37d9ada1b93c"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

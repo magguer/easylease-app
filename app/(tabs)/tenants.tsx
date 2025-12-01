@@ -1,36 +1,45 @@
 import { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  TouchableOpacity, 
-  RefreshControl, 
-  ActivityIndicator 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Users, Mail, Phone, Home, Calendar, Clock } from '@tamagui/lucide-icons';
 import { useTranslation } from '../../hooks/useTranslation';
 import { api } from '../../lib/api';
+import ListHeader from '../../components/ui/ListHeader';
+import EmptyState from '../../components/ui/EmptyState';
+import StatusBadge from '../../components/ui/StatusBadge';
 
 interface Tenant {
   _id: string;
   name: string;
   email: string;
   phone: string;
-  listing_id: {
+  // listing_id: removed
+  current_contract_id: {
     _id: string;
-    address: string;
-    suburb: string;
-    title?: string;
-  };
-  lease_start: string;
-  lease_end: string;
-  weekly_rent: number;
-  bond_paid: number;
-  status: 'active' | 'ending_soon' | 'ended' | 'terminated';
-  payment_method: string;
-  days_remaining?: number;
+    start_date: string;
+    end_date: string;
+    weekly_rent: number;
+    bond_amount: number;
+    bond_paid: boolean;
+    status: string;
+    days_remaining?: number;
+    listing_id: {
+      _id: string;
+      address: string;
+      suburb: string;
+      title?: string;
+    } | null;
+  } | null;
+  status: 'active' | 'ending_soon' | 'ended' | 'terminated' | 'available';
 }
 
 export default function TenantsScreen() {
@@ -39,10 +48,12 @@ export default function TenantsScreen() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const loadTenants = async () => {
     try {
-      const response = await api.tenants.getAll();
+      const params = filterStatus !== 'all' ? { status: filterStatus } : {};
+      const response = await api.tenants.getAll(params);
       setTenants(response.data || []);
     } catch (error) {
       console.error('Error loading tenants:', error);
@@ -54,54 +65,24 @@ export default function TenantsScreen() {
 
   useEffect(() => {
     loadTenants();
-  }, []);
+  }, [filterStatus]);
 
   const onRefresh = () => {
     setRefreshing(true);
     loadTenants();
   };
 
-  const getStatusColor = (status: Tenant['status']) => {
-    switch (status) {
-      case 'active':
-        return '#22C55E';
-      case 'ending_soon':
-        return '#F97316';
-      case 'ended':
-        return '#94A3B8';
-      case 'terminated':
-        return '#EF4444';
-      default:
-        return '#94A3B8';
-    }
-  };
-
-  const getStatusLabel = (status: Tenant['status']) => {
-    switch (status) {
-      case 'active':
-        return t('tenants.status.active');
-      case 'ending_soon':
-        return t('tenants.status.ending_soon');
-      case 'ended':
-        return t('tenants.status.ended');
-      case 'terminated':
-        return t('tenants.status.terminated');
-      default:
-        return status;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-CL', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
+    return date.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
     });
   };
 
   const renderTenant = ({ item }: { item: Tenant }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.tenantCard}
       onPress={() => router.push(`/tenant/${item._id}`)}
     >
@@ -111,11 +92,7 @@ export default function TenantsScreen() {
             <Users size={20} color="#272932" />
             <Text style={styles.tenantName}>{item.name}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-              {getStatusLabel(item.status)}
-            </Text>
-          </View>
+          <StatusBadge status={item.status} type="tenant" />
         </View>
       </View>
 
@@ -129,48 +106,50 @@ export default function TenantsScreen() {
         <Text style={styles.contactText}>{item.phone}</Text>
       </View>
 
-      {item.listing_id && (
-        <View style={styles.propertySection}>
-          <View style={styles.propertyRow}>
-            <Home size={16} color="#828489" />
-            <Text style={styles.propertyText}>
-              {item.listing_id.address}, {item.listing_id.suburb}
-            </Text>
+      {item.current_contract_id && item.current_contract_id.listing_id && (
+        <>
+          <View style={styles.propertySection}>
+            <View style={styles.propertyRow}>
+              <Home size={16} color="#828489" />
+              <Text style={styles.propertyText}>
+                {item.current_contract_id.listing_id.address}, {item.current_contract_id.listing_id.suburb}
+              </Text>
+            </View>
           </View>
-        </View>
+
+          <View style={styles.leaseSection}>
+            <View style={styles.leaseRow}>
+              <View style={styles.leaseItem}>
+                <Text style={styles.leaseLabel}>{t('tenants.lease.start')}</Text>
+                <Text style={styles.leaseValue}>{formatDate(item.current_contract_id.start_date)}</Text>
+              </View>
+              <View style={styles.leaseItem}>
+                <Text style={styles.leaseLabel}>{t('tenants.lease.end')}</Text>
+                <Text style={styles.leaseValue}>{formatDate(item.current_contract_id.end_date)}</Text>
+              </View>
+            </View>
+            {item.current_contract_id.days_remaining !== undefined && item.current_contract_id.days_remaining > 0 && (
+              <View style={styles.daysRemainingBadge}>
+                <Clock size={14} color="#F97316" />
+                <Text style={styles.daysRemainingText}>
+                  {item.current_contract_id.days_remaining} {t('tenants.lease.daysRemaining')}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.footer}>
+            <View style={styles.rentInfo}>
+              <Text style={styles.rentLabel}>{t('tenants.financial.weeklyRent')}</Text>
+              <Text style={styles.rentAmount}>${item.current_contract_id.weekly_rent}</Text>
+            </View>
+            <View style={styles.bondInfo}>
+              <Text style={styles.bondLabel}>{t('tenants.financial.bond')}</Text>
+              <Text style={styles.bondAmount}>${item.current_contract_id.bond_amount}</Text>
+            </View>
+          </View>
+        </>
       )}
-
-      <View style={styles.leaseSection}>
-        <View style={styles.leaseRow}>
-          <View style={styles.leaseItem}>
-            <Text style={styles.leaseLabel}>{t('tenants.lease.start')}</Text>
-            <Text style={styles.leaseValue}>{formatDate(item.lease_start)}</Text>
-          </View>
-          <View style={styles.leaseItem}>
-            <Text style={styles.leaseLabel}>{t('tenants.lease.end')}</Text>
-            <Text style={styles.leaseValue}>{formatDate(item.lease_end)}</Text>
-          </View>
-        </View>
-        {item.days_remaining !== undefined && item.days_remaining > 0 && (
-          <View style={styles.daysRemainingBadge}>
-            <Clock size={14} color="#F97316" />
-            <Text style={styles.daysRemainingText}>
-              {item.days_remaining} {t('tenants.lease.daysRemaining')}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.footer}>
-        <View style={styles.rentInfo}>
-          <Text style={styles.rentLabel}>{t('tenants.financial.weeklyRent')}</Text>
-          <Text style={styles.rentAmount}>${item.weekly_rent}</Text>
-        </View>
-        <View style={styles.bondInfo}>
-          <Text style={styles.bondLabel}>{t('tenants.financial.bond')}</Text>
-          <Text style={styles.bondAmount}>${item.bond_paid}</Text>
-        </View>
-      </View>
     </TouchableOpacity>
   );
 
@@ -184,19 +163,55 @@ export default function TenantsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>{t('navigation.tenants')}</Text>
-          <Text style={styles.count}>
-            {tenants.length} {tenants.length === 1 ? t('tenants.count_one') : t('tenants.count_other')}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => router.push('/tenant/create')}
+      <ListHeader
+        title={t('navigation.tenants')}
+        count={tenants.length}
+        countLabel={tenants.length === 1 ? t('tenants.count_one') : t('tenants.count_other')}
+        buttonText={t('common.addNew')}
+        onButtonPress={() => router.push('/tenant/create')}
+        buttonColor="#4D7EA8"
+      />
+
+      {/* Filtros */}
+      <View style={styles.filtersContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersScroll}
         >
-          <Text style={styles.createButtonText}>+ {t('common.add')}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, filterStatus === 'all' && styles.filterButtonActive]}
+            onPress={() => setFilterStatus('all')}
+          >
+            <Text style={[styles.filterButtonText, filterStatus === 'all' && styles.filterButtonTextActive]}>
+              {t('tenants.filters.all')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, filterStatus === 'active' && styles.filterButtonActive]}
+            onPress={() => setFilterStatus('active')}
+          >
+            <Text style={[styles.filterButtonText, filterStatus === 'active' && styles.filterButtonTextActive]}>
+              {t('tenants.filters.active')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, filterStatus === 'ending_soon' && styles.filterButtonActive]}
+            onPress={() => setFilterStatus('ending_soon')}
+          >
+            <Text style={[styles.filterButtonText, filterStatus === 'ending_soon' && styles.filterButtonTextActive]}>
+              {t('tenants.filters.endingSoon')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, filterStatus === 'ended' && styles.filterButtonActive]}
+            onPress={() => setFilterStatus('ended')}
+          >
+            <Text style={[styles.filterButtonText, filterStatus === 'ended' && styles.filterButtonTextActive]}>
+              {t('tenants.filters.ended')}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
 
       <FlatList
@@ -208,11 +223,12 @@ export default function TenantsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Users size={64} color="#CBD5E1" />
-            <Text style={styles.emptyText}>{t('tenants.noTenants')}</Text>
-            <Text style={styles.emptySubtext}>{t('tenants.pullToRefresh')}</Text>
-          </View>
+          <EmptyState
+            icon={Users}
+            title={t('tenants.noTenants')}
+            subtitle={t('common.pullToRefresh')}
+            iconColor="#CBD5E1"
+          />
         }
       />
     </View>
@@ -229,37 +245,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#272932',
-    marginBottom: 4,
-  },
-  count: {
-    fontSize: 14,
-    color: '#828489',
-  },
-  createButton: {
-    backgroundColor: '#4D7EA8',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  createButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
   },
   listContainer: {
     padding: 16,
@@ -403,19 +388,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#64748B',
   },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 60,
+  filtersContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#94A3B8',
-    marginTop: 16,
+  filtersScroll: {
+    gap: 8,
   },
-  emptySubtext: {
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+  },
+  filterButtonActive: {
+    backgroundColor: '#4D7EA8',
+  },
+  filterButtonText: {
     fontSize: 14,
-    color: '#CBD5E1',
-    marginTop: 4,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  filterButtonTextActive: {
+    color: '#FFF',
   },
 });

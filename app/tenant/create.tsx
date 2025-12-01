@@ -27,14 +27,16 @@ interface FormData {
   emergency_contact_phone: string;
   emergency_contact_relationship: string;
   listing_id: string;
-  lease_start: string;
-  lease_end: string;
-  weekly_rent: string;
-  bond_paid: string;
-  payment_method: string;
   notes: string;
   create_user_account: boolean;
   user_password: string;
+  create_contract: boolean;
+  contract_start_date: string;
+  contract_end_date: string;
+  weekly_rent: string;
+  bond_amount: string;
+  bond_paid: boolean;
+  payment_frequency: string;
 }
 
 interface Listing {
@@ -74,14 +76,16 @@ export default function CreateTenantScreen() {
     emergency_contact_phone: '',
     emergency_contact_relationship: '',
     listing_id: '',
-    lease_start: '',
-    lease_end: '',
-    weekly_rent: '',
-    bond_paid: '',
-    payment_method: 'bank_transfer',
     notes: '',
-    create_user_account: true, // Default to true
-    user_password: generateRandomPassword(), // Generate initial password
+    create_user_account: true,
+    user_password: generateRandomPassword(),
+    create_contract: true, // Default to creating contract
+    contract_start_date: '',
+    contract_end_date: '',
+    weekly_rent: '',
+    bond_amount: '',
+    bond_paid: false,
+    payment_frequency: 'weekly',
   });
 
   useEffect(() => {
@@ -107,14 +111,27 @@ export default function CreateTenantScreen() {
   const updateField = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     
-    // Auto-fill weekly_rent when listing is selected
-    if (field === 'listing_id' && value) {
-      const selectedListing = availableListings.find((l) => l._id === value);
-      if (selectedListing) {
+    // Auto-fill weekly_rent and calculate bond when listing is selected
+    if (field === 'listing_id') {
+      if (value) {
+        const selectedListing = availableListings.find((l) => l._id === value);
+        if (selectedListing) {
+          const rent = selectedListing.price_per_week;
+          setFormData((prev) => ({
+            ...prev,
+            listing_id: value,
+            weekly_rent: rent.toString(),
+            bond_amount: (rent * 4).toString(), // 4 weeks bond
+          }));
+        }
+      } else {
+        // Si se deselecciona, limpiar datos del contrato
         setFormData((prev) => ({
           ...prev,
-          listing_id: value,
-          weekly_rent: selectedListing.price_per_week.toString(),
+          listing_id: '',
+          create_contract: false,
+          weekly_rent: '',
+          bond_amount: '',
         }));
       }
     }
@@ -143,33 +160,37 @@ export default function CreateTenantScreen() {
       Alert.alert(t('common.error'), 'Phone number is required');
       return false;
     }
-    if (!formData.listing_id) {
-      Alert.alert(t('common.error'), 'Please select a listing');
-      return false;
-    }
-    if (!formData.lease_start) {
-      Alert.alert(t('common.error'), 'Lease start date is required');
-      return false;
-    }
-    if (!formData.lease_end) {
-      Alert.alert(t('common.error'), 'Lease end date is required');
-      return false;
-    }
-    if (!formData.weekly_rent || parseFloat(formData.weekly_rent) <= 0) {
-      Alert.alert(t('common.error'), 'Valid weekly rent is required');
-      return false;
-    }
-    if (!formData.bond_paid || parseFloat(formData.bond_paid) < 0) {
-      Alert.alert(t('common.error'), 'Valid bond amount is required');
-      return false;
-    }
     
-    // Validate dates
-    const startDate = new Date(formData.lease_start);
-    const endDate = new Date(formData.lease_end);
-    if (endDate <= startDate) {
-      Alert.alert(t('common.error'), 'Lease end date must be after start date');
-      return false;
+    // Validate contract fields if creating contract
+    if (formData.create_contract) {
+      if (!formData.listing_id) {
+        Alert.alert(t('common.error'), 'Please select a listing to create a contract');
+        return false;
+      }
+      if (!formData.contract_start_date) {
+        Alert.alert(t('common.error'), 'Contract start date is required');
+        return false;
+      }
+      if (!formData.contract_end_date) {
+        Alert.alert(t('common.error'), 'Contract end date is required');
+        return false;
+      }
+      if (!formData.weekly_rent || parseFloat(formData.weekly_rent) <= 0) {
+        Alert.alert(t('common.error'), 'Valid weekly rent is required');
+        return false;
+      }
+      if (!formData.bond_amount || parseFloat(formData.bond_amount) < 0) {
+        Alert.alert(t('common.error'), 'Valid bond amount is required');
+        return false;
+      }
+      
+      // Validate dates
+      const startDate = new Date(formData.contract_start_date);
+      const endDate = new Date(formData.contract_end_date);
+      if (endDate <= startDate) {
+        Alert.alert(t('common.error'), 'Contract end date must be after start date');
+        return false;
+      }
     }
     
     return true;
@@ -181,7 +202,7 @@ export default function CreateTenantScreen() {
     try {
       setLoading(true);
 
-      const payload = {
+      const payload: any = {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
@@ -190,22 +211,35 @@ export default function CreateTenantScreen() {
           phone: formData.emergency_contact_phone.trim() || undefined,
           relationship: formData.emergency_contact_relationship.trim() || undefined,
         },
-        listing_id: formData.listing_id,
-        lease_start: formData.lease_start,
-        lease_end: formData.lease_end,
-        weekly_rent: parseFloat(formData.weekly_rent),
-        bond_paid: parseFloat(formData.bond_paid),
-        payment_method: formData.payment_method,
+        listing_id: formData.listing_id || undefined,
         notes: formData.notes.trim() || undefined,
-        status: 'active',
         create_user_account: formData.create_user_account,
         user_password: formData.create_user_account ? formData.user_password : undefined,
+        create_contract: formData.create_contract,
       };
+
+      // Add contract data if creating contract
+      if (formData.create_contract) {
+        payload.contract_data = {
+          start_date: formData.contract_start_date,
+          end_date: formData.contract_end_date,
+          weekly_rent: parseFloat(formData.weekly_rent),
+          bond_amount: parseFloat(formData.bond_amount),
+          bond_paid: formData.bond_paid,
+          payment_frequency: formData.payment_frequency,
+          status: 'active',
+        };
+      }
 
       const response = await api.tenants.create(payload);
       
-      // Show success message with user credentials if created
+      // Build success message
       let message = t('tenants.form.createSuccess');
+      
+      if (response.contract?.contract_id) {
+        message += `\n\n✅ ${t('tenants.form.contractCreated')}`;
+      }
+      
       if (response.user?.temporary_password) {
         message += `\n\n${t('tenants.form.userAccountCreated')}:\nEmail: ${response.user.email}\n${t('tenants.form.temporaryPassword')}: ${response.user.temporary_password}\n\n${t('tenants.form.shareCredentials')}`;
       } else if (response.user?.message) {
@@ -236,7 +270,7 @@ export default function CreateTenantScreen() {
   if (loadingListings) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <DetailHeader title={t('tenants.createTenant')} showEdit={false} />
+        <DetailHeader title={t('tenants.addTenant')} showEdit={false} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4D7EA8" />
         </View>
@@ -246,7 +280,7 @@ export default function CreateTenantScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <DetailHeader title={t('tenants.createTenant')} showEdit={false} />
+      <DetailHeader title={t('tenants.addTenant')} showEdit={false} />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Personal Information */}
@@ -396,7 +430,10 @@ export default function CreateTenantScreen() {
 
         {/* Listing Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('tenants.form.selectListing')} *</Text>
+          <Text style={styles.sectionTitle}>{t('tenants.form.selectListing')}</Text>
+          <Text style={styles.sectionDescription}>
+            {t('tenants.form.selectListingOptional')}
+          </Text>
           
           {availableListings.length === 0 ? (
             <Text style={styles.noListingsText}>
@@ -404,6 +441,34 @@ export default function CreateTenantScreen() {
             </Text>
           ) : (
             <View style={styles.listingSelector}>
+              {/* Option to deselect */}
+              <TouchableOpacity
+                style={[
+                  styles.listingOption,
+                  !formData.listing_id && styles.listingOptionActive,
+                ]}
+                onPress={() => updateField('listing_id', '')}
+              >
+                <View style={styles.listingOptionContent}>
+                  <Text
+                    style={[
+                      styles.listingTitle,
+                      !formData.listing_id && styles.listingTitleActive,
+                    ]}
+                  >
+                    {t('tenants.form.noAssignment')}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.listingAddress,
+                      !formData.listing_id && styles.listingAddressActive,
+                    ]}
+                  >
+                    Sin propiedad asignada
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              
               {availableListings.map((listing) => (
                 <TouchableOpacity
                   key={listing._id}
@@ -445,99 +510,137 @@ export default function CreateTenantScreen() {
           )}
         </View>
 
-        {/* Lease Information */}
+        {/* Create Contract Switch */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('tenants.form.leaseInfo')}</Text>
-
-          <View style={styles.row}>
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>{t('tenants.form.leaseStart')} *</Text>
-              <TouchableOpacity
-                style={styles.dateInputContainer}
-                onPress={() => setShowStartDatePicker(true)}
-              >
-                <Calendar size={20} color="#64748B" style={styles.dateIcon} />
-                <Text style={[styles.dateText, !formData.lease_start && styles.placeholderText]}>
-                  {formData.lease_start || 'YYYY-MM-DD'}
-                </Text>
-              </TouchableOpacity>
+          <View style={styles.switchField}>
+            <View style={styles.switchLabelContainer}>
+              <Text style={styles.label}>{t('tenants.form.createContract')}</Text>
+              <Text style={styles.switchDescription}>
+                {t('tenants.form.createContractDesc')}
+              </Text>
             </View>
-
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>{t('tenants.form.leaseEnd')} *</Text>
-              <TouchableOpacity
-                style={styles.dateInputContainer}
-                onPress={() => setShowEndDatePicker(true)}
-              >
-                <Calendar size={20} color="#64748B" style={styles.dateIcon} />
-                <Text style={[styles.dateText, !formData.lease_end && styles.placeholderText]}>
-                  {formData.lease_end || 'YYYY-MM-DD'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <Switch
+              value={formData.create_contract}
+              onValueChange={(value) => updateField('create_contract', value)}
+              trackColor={{ false: '#CBD5E1', true: '#3B82F6' }}
+              thumbColor={formData.create_contract ? '#FFFFFF' : '#F1F5F9'}
+              disabled={!formData.listing_id}
+            />
           </View>
         </View>
 
-        {/* Financial Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('tenants.form.financialInfo')}</Text>
+        {/* Contract Information - Only show if creating contract */}
+        {formData.create_contract && formData.listing_id && (
+          <>
+            {/* Contract Dates */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('tenants.form.contractInfo')}</Text>
 
-          <View style={styles.row}>
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>{t('tenants.form.weeklyRent')} * ($)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.weekly_rent}
-                onChangeText={(value) => updateField('weekly_rent', value)}
-                placeholder="0"
-                placeholderTextColor="#94A3B8"
-                keyboardType="decimal-pad"
-              />
-            </View>
-
-            <View style={[styles.field, styles.fieldHalf]}>
-              <Text style={styles.label}>{t('tenants.form.bondPaid')} ($)</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.bond_paid}
-                onChangeText={(value) => updateField('bond_paid', value)}
-                placeholder="0"
-                placeholderTextColor="#94A3B8"
-                keyboardType="decimal-pad"
-              />
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>{t('tenants.form.paymentMethod')}</Text>
-            <View style={styles.radioGroup}>
-              {[
-                { value: 'bank_transfer', label: t('tenants.paymentMethods.bank_transfer') },
-                { value: 'cash', label: t('tenants.paymentMethods.cash') },
-                { value: 'card', label: t('tenants.paymentMethods.card') },
-                { value: 'other', label: t('tenants.paymentMethods.other') },
-              ].map((method) => (
-                <TouchableOpacity
-                  key={method.value}
-                  style={[
-                    styles.radioButton,
-                    formData.payment_method === method.value && styles.radioButtonActive,
-                  ]}
-                  onPress={() => updateField('payment_method', method.value)}
-                >
-                  <Text
-                    style={[
-                      styles.radioText,
-                      formData.payment_method === method.value && styles.radioTextActive,
-                    ]}
+              <View style={styles.row}>
+                <View style={[styles.field, styles.fieldHalf]}>
+                  <Text style={styles.label}>{t('tenants.form.contractStart')} *</Text>
+                  <TouchableOpacity
+                    style={styles.dateInputContainer}
+                    onPress={() => setShowStartDatePicker(true)}
                   >
-                    {method.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Calendar size={20} color="#64748B" style={styles.dateIcon} />
+                    <Text style={[styles.dateText, !formData.contract_start_date && styles.placeholderText]}>
+                      {formData.contract_start_date || 'YYYY-MM-DD'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={[styles.field, styles.fieldHalf]}>
+                  <Text style={styles.label}>{t('tenants.form.contractEnd')} *</Text>
+                  <TouchableOpacity
+                    style={styles.dateInputContainer}
+                    onPress={() => setShowEndDatePicker(true)}
+                  >
+                    <Calendar size={20} color="#64748B" style={styles.dateIcon} />
+                    <Text style={[styles.dateText, !formData.contract_end_date && styles.placeholderText]}>
+                      {formData.contract_end_date || 'YYYY-MM-DD'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
+
+            {/* Financial Information */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('tenants.form.financialInfo')}</Text>
+
+              <View style={styles.row}>
+                <View style={[styles.field, styles.fieldHalf]}>
+                  <Text style={styles.label}>{t('tenants.form.weeklyRent')} * ($)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.weekly_rent}
+                    onChangeText={(value) => updateField('weekly_rent', value)}
+                    placeholder="0"
+                    placeholderTextColor="#94A3B8"
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+
+                <View style={[styles.field, styles.fieldHalf]}>
+                  <Text style={styles.label}>{t('tenants.form.bondAmount')} ($)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.bond_amount}
+                    onChangeText={(value) => updateField('bond_amount', value)}
+                    placeholder="0"
+                    placeholderTextColor="#94A3B8"
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.switchField}>
+                <View style={styles.switchLabelContainer}>
+                  <Text style={styles.label}>{t('tenants.form.bondPaid')}</Text>
+                  <Text style={styles.switchDescription}>
+                    {t('tenants.form.bondPaidDesc')}
+                  </Text>
+                </View>
+                <Switch
+                  value={formData.bond_paid}
+                  onValueChange={(value) => updateField('bond_paid', value)}
+                  trackColor={{ false: '#CBD5E1', true: '#3B82F6' }}
+                  thumbColor={formData.bond_paid ? '#FFFFFF' : '#F1F5F9'}
+                />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>{t('tenants.form.paymentFrequency')}</Text>
+                <View style={styles.radioGroup}>
+                  {[
+                    { value: 'weekly', label: t('tenants.paymentFrequency.weekly') },
+                    { value: 'fortnightly', label: t('tenants.paymentFrequency.fortnightly') },
+                    { value: 'monthly', label: t('tenants.paymentFrequency.monthly') },
+                  ].map((method) => (
+                    <TouchableOpacity
+                      key={method.value}
+                      style={[
+                        styles.radioButton,
+                        formData.payment_frequency === method.value && styles.radioButtonActive,
+                      ]}
+                      onPress={() => updateField('payment_frequency', method.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.radioText,
+                          formData.payment_frequency === method.value && styles.radioTextActive,
+                        ]}
+                      >
+                        {method.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Notes */}
         <View style={styles.section}>
@@ -564,7 +667,7 @@ export default function CreateTenantScreen() {
           onPress={() => router.back()}
           disabled={loading}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.saveButton, loading && styles.saveButtonDisabled]}
@@ -574,7 +677,7 @@ export default function CreateTenantScreen() {
           {loading ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.saveButtonText}>Create Tenant</Text>
+            <Text style={styles.saveButtonText}>{t('tenants.createTenant')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -584,23 +687,23 @@ export default function CreateTenantScreen() {
         visible={showStartDatePicker}
         onClose={() => setShowStartDatePicker(false)}
         onSelect={(date) => {
-          updateField('lease_start', date);
+          updateField('contract_start_date', date);
           setShowStartDatePicker(false);
         }}
-        initialDate={formData.lease_start || undefined}
-        title={t('tenants.form.leaseStart')}
+        initialDate={formData.contract_start_date || undefined}
+        title={t('tenants.form.contractStart')}
       />
 
       <DatePickerModal
         visible={showEndDatePicker}
         onClose={() => setShowEndDatePicker(false)}
         onSelect={(date) => {
-          updateField('lease_end', date);
+          updateField('contract_end_date', date);
           setShowEndDatePicker(false);
         }}
-        initialDate={formData.lease_end || undefined}
-        minimumDate={formData.lease_start || undefined}
-        title={t('tenants.form.leaseEnd')}
+        initialDate={formData.contract_end_date || undefined}
+        minimumDate={formData.contract_start_date || undefined}
+        title={t('tenants.form.contractEnd')}
       />
     </View>
   );
@@ -629,6 +732,34 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#272932',
     marginBottom: 16,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  sectionHeaderWithButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 0,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  clearButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#EF4444',
   },
   field: {
     marginBottom: 16,
@@ -753,7 +884,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingVertical: 14,
     paddingHorizontal: 20,
-    backgroundColor: '#7BA89E',
+    backgroundColor: '#4D7EA8',
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -912,7 +1043,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalDoneButton: {
-    backgroundColor: '#7BA89E',
+    backgroundColor: '#4D7EA8',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 16,

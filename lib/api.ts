@@ -1,10 +1,11 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 
 // API Base URL - usar la IP de tu máquina para que funcione en dispositivos móviles
 const API_BASE_URL = __DEV__ 
-  ? 'http://172.20.10.2:8008' 
-  : 'https://your-production-api.com';
+  ? 'http://192.168.0.26:8008' 
+  : Constants.expoConfig?.extra?.apiUrl || 'https://easylease-api.vercel.app/api';
 
 // Storage keys
 const TOKEN_KEY = 'auth_token';
@@ -131,26 +132,26 @@ export const api = {
     },
   },
 
-  // Partners
-  partners: {
-    getAll: async (params?: { status?: string; page?: number; limit?: number }) => {
-      const response = await apiClient.get('/partners', { params });
+  // Owners
+  owners: {
+    getAll: async () => {
+      const response = await apiClient.get('/owners');
       return response.data;
     },
     getById: async (id: string) => {
-      const response = await apiClient.get(`/partners/${id}`);
+      const response = await apiClient.get(`/owners/${id}`);
       return response.data;
     },
     create: async (data: any) => {
-      const response = await apiClient.post('/partners', data);
+      const response = await apiClient.post('/owners', data);
       return response.data;
     },
     update: async (id: string, data: any) => {
-      const response = await apiClient.put(`/partners/${id}`, data);
+      const response = await apiClient.put(`/owners/${id}`, data);
       return response.data;
     },
     delete: async (id: string) => {
-      const response = await apiClient.delete(`/partners/${id}`);
+      const response = await apiClient.delete(`/owners/${id}`);
       return response.data;
     },
   },
@@ -177,6 +178,10 @@ export const api = {
       const response = await apiClient.delete(`/tenants/${id}`);
       return response.data;
     },
+    unlink: async (id: string) => {
+      const response = await apiClient.post(`/tenants/${id}/unlink`);
+      return response.data;
+    },
     updateStatus: async (id: string, status: string) => {
       const response = await apiClient.patch(`/tenants/${id}/status`, { status });
       return response.data;
@@ -187,6 +192,50 @@ export const api = {
   dashboard: {
     getStats: async () => {
       const response = await apiClient.get('/dashboard/stats');
+      return response.data;
+    },
+  },
+
+  // Contracts
+  contracts: {
+    getAll: async (params?: { status?: string; tenant_id?: string; listing_id?: string; owner_id?: string }) => {
+      const response = await apiClient.get('/contracts', { params });
+      return response.data;
+    },
+    getById: async (id: string) => {
+      const response = await apiClient.get(`/contracts/${id}`);
+      return response.data;
+    },
+    create: async (data: any) => {
+      const response = await apiClient.post('/contracts', data);
+      return response.data;
+    },
+    update: async (id: string, data: any) => {
+      const response = await apiClient.put(`/contracts/${id}`, data);
+      return response.data;
+    },
+    delete: async (id: string) => {
+      const response = await apiClient.delete(`/contracts/${id}`);
+      return response.data;
+    },
+    terminate: async (id: string, termination_reason?: string) => {
+      const response = await apiClient.post(`/contracts/${id}/terminate`, { termination_reason });
+      return response.data;
+    },
+    restart: async (id: string) => {
+      const response = await apiClient.post(`/contracts/${id}/restart`);
+      return response.data;
+    },
+    assignTenant: async (id: string, tenant_id: string) => {
+      const response = await apiClient.post(`/contracts/${id}/assign-tenant`, { tenant_id });
+      return response.data;
+    },
+    addDocument: async (id: string, document: { type: string; name: string; url: string }) => {
+      const response = await apiClient.post(`/contracts/${id}/documents`, document);
+      return response.data;
+    },
+    removeDocument: async (id: string, documentId: string) => {
+      const response = await apiClient.delete(`/contracts/${id}/documents/${documentId}`);
       return response.data;
     },
   },

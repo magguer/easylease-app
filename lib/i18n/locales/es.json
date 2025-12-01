@@ -11,6 +11,7 @@
     "view": "Ver",
     "create": "Crear",
     "add": "Agregar",
+    "addNew": "+ Agregar",
     "search": "Buscar",
     "filter": "Filtrar",
     "refresh": "Actualizar",
@@ -23,7 +24,8 @@
     "required": "Requerido",
     "optional": "Opcional",
     "all": "Todos",
-    "none": "Ninguno"
+    "none": "Ninguno",
+    "pullToRefresh": "Desliza hacia abajo para recargar"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -60,7 +62,7 @@
     "activeListings": "Propiedades Activas",
     "totalLeads": "Total de Clientes",
     "newLeads": "Nuevos Clientes",
-    "totalPartners": "Total de Socios",
+    "totalPartners": "Total de Propietarios",
     "totalTenants": "Total de Inquilinos",
     "activeTenants": "Inquilinos Activos",
     "recentActivity": "Actividad Reciente",
@@ -81,6 +83,10 @@
     "nextPayment": "Próximo Pago",
     "leaseEnd": "Fin del Contrato",
     "monthsRemaining": "meses restantes",
+    "daysRemaining": "días restantes",
+    "daysUntil": "días",
+    "noProperty": "Sin Propiedad Asignada",
+    "noPropertyMessage": "Actualmente no tienes una propiedad asignada. Contacta a tu propietario para más información.",
     "paymentHistory": "Historial de Pagos",
     "paymentHistorySubtitle": "Ver todos los pagos",
     "requestMaintenance": "Solicitar Mantenimiento",
@@ -94,18 +100,21 @@
     "myLeads": "Mis Clientes Potenciales"
   },
   "listings": {
-    "title": "Listings",
-    "count_one": "listing",
-    "count_other": "listings",
-    "createListing": "Crear Listing",
-    "editListing": "Editar Listing",
-    "viewListing": "Ver Listing",
-    "deleteListing": "Eliminar Listing",
-    "listingDetails": "Detalles de Listing",
-    "noListings": "No se encontraron listings",
-    "createFirst": "Crea tu primer listing",
+    "title": "Propiedades",
+    "count_one": "propeidades",
+    "addListing": "Nueva Propiedad",
+    "createListing": "Crear Propiedad",
+    "createListingDesc": "Agregar una nueva propiedad a la plataforma",
+    "editListing": "Editar Propiedad",
+    "count_other": "propiedades",
+    "viewListing": "Ver Propiedades",
+    "deleteListing": "Eliminar Propiedad",
+    "listingDetails": "Detalles de Propiedad",
+    "noListings": "No se encontraron propiedades",
+    "createFirst": "Crea tu primera propiedad",
     "detail": {
-      "title": "Detalle de Listing"
+
+      "title": "Detalle de Propiedad"
     },
     "fields": {
       "title": "Título",
@@ -126,7 +135,10 @@
       "active": "Activa",
       "pending": "Pendiente",
       "rented": "Rentada",
-      "inactive": "Inactiva"
+      "inactive": "Inactiva",
+      "published": "Publicado",
+      "draft": "Borrador",
+      "reserved": "Reservado"
     },
     "propertyTypes": {
       "apartment": "Apartamento",
@@ -142,10 +154,60 @@
       "deleteConfirm": "¿Estás seguro de que quieres eliminar esta propiedad?",
       "uploadImages": "Subir Imágenes",
       "maxImages": "Máximo 10 imágenes"
+    },
+    "form": {
+      "basicInformation": "Información Básica",
+      "pricing": "Precios",
+      "location": "Ubicación",
+      "leaseTerms": "Términos del Contrato",
+      "amenities": "Comodidades",
+      "images": "Imágenes",
+      "title": "Título",
+      "titlePlaceholder": "ej., Habitación acogedora en casa compartida",
+      "titleRequired": "El título es obligatorio",
+      "roomType": "Tipo de Habitación",
+      "single": "Individual",
+      "double": "Doble",
+      "master": "Principal",
+      "status": "Estado",
+      "draft": "Borrador",
+      "published": "Publicado",
+      "pricePerWeek": "Precio por Semana",
+      "bond": "Depósito",
+      "billsIncluded": "Servicios Incluidos",
+      "address": "Dirección",
+      "addressPlaceholder": "Calle Principal 123",
+      "addressRequired": "La dirección es obligatoria",
+      "suburb": "Suburbio",
+      "suburbPlaceholder": "Centro de Brisbane",
+      "availableFrom": "Disponible Desde",
+      "selectDate": "Seleccionar Fecha de Disponibilidad",
+      "minimumTerm": "Término Mínimo (semanas)",
+      "parking": "Estacionamiento",
+      "internet": "Internet",
+      "furnished": "Amueblado",
+      "petsAllowed": "Mascotas Permitidas",
+      "cancel": "Cancelar",
+      "createListing": "Crear Propiedad",
+      "priceRequired": "Se requiere un precio válido",
+      "saveChanges": "Guardar Cambios",
+      "loadError": "Error al cargar los detalles de la propiedad",
+      "updateError": "Error al actualizar la propiedad",
+      "deleteError": "Error al eliminar la propiedad",
+      "deleteConfirmTitle": "¿Estás seguro de que quieres eliminar esta propiedad?",
+      "deleteConfirmMessage": "Esta acción no se puede deshacer.",
+      "dangerZone": "Zona de Peligro",
+      "dangerZoneDescription": "Eliminar esta propiedad es permanente y no se puede deshacer.",
+      "deleteListing": "Eliminar Propiedad",
+      "reserved": "Reservado",
+      "rented": "Alquilado",
+      "imageUploadComingSoon": "Subida de imágenes próximamente"
     }
   },
   "leads": {
     "title": "Clientes Potenciales",
+    "count_one": "cliente potencial",
+    "count_other": "clientes potenciales",
     "viewLead": "Ver Cliente",
     "editLead": "Editar Cliente",
     "deleteLead": "Eliminar Cliente",
@@ -194,14 +256,18 @@
     }
   },
   "partners": {
-    "title": "Socios",
-    "createPartner": "Crear Socio",
-    "editPartner": "Editar Socio",
-    "viewPartner": "Ver Socio",
-    "deletePartner": "Eliminar Socio",
-    "partnerDetails": "Detalles del Socio",
-    "noPartners": "No se encontraron socios",
-    "createFirst": "Crea tu primer socio",
+    "title": "Propietarios",
+    "count_one": "propietario",
+    "count_other": "propietarios",
+    "addOwner": "Nuevo Propietario",
+    "createPartner": "Crear Propietario",
+    "createPartnerDesc": "Agregar un nuevo propietario al sistema",
+    "editPartner": "Editar Propietario",
+    "viewPartner": "Ver Propietario",
+    "deletePartner": "Eliminar Propietario",
+    "partnerDetails": "Detalles del Propietario",
+    "noPartners": "No se encontraron propietarios",
+    "createFirst": "Crea tu primer propietario",
     "fields": {
       "name": "Nombre",
       "email": "Correo Electrónico",
@@ -218,10 +284,43 @@
       "inactive": "Inactivo"
     },
     "messages": {
-      "createSuccess": "Socio creado exitosamente",
-      "updateSuccess": "Socio actualizado exitosamente",
-      "deleteSuccess": "Socio eliminado exitosamente",
-      "deleteConfirm": "¿Estás seguro de que quieres eliminar este socio?"
+      "createSuccess": "Propietario creado exitosamente",
+      "updateSuccess": "Propietario actualizado exitosamente",
+      "deleteSuccess": "Propietario eliminado exitosamente",
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar este propietario?",
+      "loadError": "Error al cargar los detalles del propietario",
+      "updateError": "Error al actualizar propietario",
+      "deleteError": "Error al eliminar propietario"
+    },
+    "detail": {
+      "title": "Detalle de Propietario"
+    },
+    "form": {
+      "basicInformation": "Información Básica",
+      "personalInfo": "Información Personal",
+      "name": "Nombre Completo",
+      "namePlaceholder": "ej., Juan Pérez",
+      "nameRequired": "El nombre es obligatorio",
+      "email": "Correo Electrónico",
+      "emailPlaceholder": "correo@ejemplo.com",
+      "emailRequired": "El correo es obligatorio",
+      "phone": "Número de Teléfono",
+      "phonePlaceholder": "+1234567890",
+      "phoneRequired": "El teléfono es obligatorio",
+      "company": "Nombre de la Empresa",
+      "companyPlaceholder": "Empresa (opcional)",
+      "status": "Estado",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas o comentarios adicionales...",
+      "cancel": "Cancelar",
+      "saveChanges": "Guardar Cambios",
+      "createOwner": "Crear Propietario",
+      "dangerZone": "Zona de Peligro",
+      "dangerZoneDescription": "Eliminar este propietario es permanente y no se puede deshacer.",
+      "deleteOwner": "Eliminar Propietario",
+      "deleteConfirmMessage": "Esta acción no se puede deshacer."
     }
   },
   "settings": {
@@ -247,9 +346,23 @@
     "count_other": "inquilinos",
     "noTenants": "No hay inquilinos",
     "pullToRefresh": "Desliza hacia abajo para actualizar",
+    "addTenant": "Nuevo Inquilino",
     "createTenant": "Crear Inquilino",
+    "createTenantDesc": "Agregar un nuevo inquilino a una propiedad",
+    "editTenant": "Editar Inquilino",
     "detail": {
-      "title": "Detalle de Inquilino"
+      "title": "Detalle de Inquilino",
+      "contractSection": "Contrato",
+      "noContract": "Sin contrato activo",
+      "noContractMessage": "Este inquilino no tiene un contrato activo. Puedes crear uno desde el formulario de edición.",
+      "propertySection": "Propiedad",
+      "actionsSection": "Acciones"
+    },
+    "filters": {
+      "all": "Todos",
+      "active": "Activos",
+      "endingSoon": "Por Vencer",
+      "ended": "Finalizados"
     },
     "status": {
       "active": "Activo",
@@ -260,17 +373,32 @@
     "lease": {
       "start": "Inicio",
       "end": "Fin",
-      "daysRemaining": "días restantes"
+      "daysRemaining": "días restantes",
+      "duration": "Duración",
+      "weeks": "semanas"
     },
     "financial": {
       "weeklyRent": "Renta Semanal",
       "bond": "Depósito"
+    },
+    "actions": {
+      "unlink": "Desvincular del Contrato",
+      "terminateContract": "Desvincular del Contrato"
+    },
+    "unlink": {
+      "confirm": "¿Estás seguro de que quieres desvincular del contrato?",
+      "confirmMessage": "El contrato se terminará, el inquilino se desvinculará y la propiedad quedará disponible nuevamente.",
+      "success": "Desvinculado del contrato exitosamente",
+      "error": "Error al desvincular del contrato"
     },
     "form": {
       "personalInfo": "Información Personal",
       "emergencyContact": "Contacto de Emergencia",
       "leaseInfo": "Información del Contrato",
       "financialInfo": "Información Financiera",
+      "propertyAssignment": "Propiedad Asignada",
+      "contractAssignment": "Contrato Asignado",
+      "noAssignment": "Sin Asignar",
       "fullName": "Nombre Completo",
       "email": "Correo Electrónico",
       "phone": "Teléfono",
@@ -287,6 +415,16 @@
       "notes": "Notas",
       "createUserAccount": "Crear Cuenta de Usuario",
       "createUserAccountDesc": "Permitir al inquilino acceder a la app con sus propias credenciales",
+      "createContract": "Crear Contrato",
+      "createContractDesc": "Crear un contrato al mismo tiempo que el inquilino",
+      "contractCreated": "Contrato creado exitosamente",
+      "contractInfo": "Información del Contrato",
+      "contractStart": "Inicio del Contrato",
+      "contractEnd": "Fin del Contrato",
+      "bondAmount": "Monto del Depósito",
+      "bondPaidDesc": "El depósito ha sido pagado",
+      "paymentFrequency": "Frecuencia de Pago",
+      "selectListingOptional": "Selecciona una propiedad si deseas asignarla ahora, o déjala vacía para asignarla después.",
       "password": "Contraseña",
       "passwordHint": "La contraseña será",
       "generate": "Generar",
@@ -297,13 +435,46 @@
       "createError": "Error al crear inquilino",
       "userAccountCreated": "Cuenta de Usuario Creada",
       "temporaryPassword": "Contraseña Temporal",
-      "shareCredentials": "Por favor comparte estas credenciales con el inquilino"
+      "shareCredentials": "Por favor comparte estas credenciales con el inquilino",
+      "fullNamePlaceholder": "Juan Pérez",
+      "fullNameRequired": "El nombre completo es obligatorio",
+      "emailPlaceholder": "juan@ejemplo.com",
+      "emailRequired": "El correo electrónico es obligatorio",
+      "phonePlaceholder": "+61 400 000 000",
+      "phoneRequired": "El teléfono es obligatorio",
+      "contactNamePlaceholder": "María Pérez",
+      "contactPhonePlaceholder": "+61 400 000 000",
+      "relationshipPlaceholder": "Madre, Padre, Amigo, etc.",
+      "leaseStartRequired": "La fecha de inicio del contrato es obligatoria",
+      "leaseEndRequired": "La fecha de fin del contrato es obligatoria",
+      "leaseEndAfterStart": "La fecha de fin debe ser posterior a la de inicio",
+      "weeklyRentRequired": "La renta semanal es obligatoria",
+      "bondPaidRequired": "El monto del depósito es obligatorio",
+      "notesPlaceholder": "Notas o comentarios adicionales...",
+      "passwordPlaceholder": "Ingresa la contraseña",
+      "passwordRequired": "La contraseña es obligatoria",
+      "selectDate": "Seleccionar Fecha",
+      "updateSuccess": "Inquilino actualizado exitosamente",
+      "updateError": "Error al actualizar inquilino",
+      "deleteSuccess": "Inquilino eliminado exitosamente",
+      "deleteError": "Error al eliminar inquilino",
+      "loadError": "Error al cargar los detalles del inquilino",
+      "saveChanges": "Guardar Cambios",
+      "dangerZone": "Zona de Peligro",
+      "dangerZoneDescription": "Eliminar este inquilino es permanente y no se puede deshacer.",
+      "deleteTenant": "Eliminar Inquilino",
+      "deleteConfirmMessage": "Esta acción no se puede deshacer."
     },
     "paymentMethods": {
       "bank_transfer": "Transferencia Bancaria",
       "cash": "Efectivo",
       "card": "Tarjeta",
       "other": "Otro"
+    },
+    "paymentFrequency": {
+      "weekly": "Semanal",
+      "fortnightly": "Quincenal",
+      "monthly": "Mensual"
     }
   },
   "notifications": {
@@ -311,7 +482,7 @@
     "leadUpdated": "Cliente actualizado",
     "listingCreated": "Nueva propiedad creada",
     "listingUpdated": "Propiedad actualizada",
-    "partnerCreated": "Nuevo socio agregado"
+    "partnerCreated": "Nuevo propietario agregado"
   },
   "errors": {
     "generic": "Algo salió mal. Por favor intenta de nuevo.",
@@ -324,5 +495,34 @@
     "invalidPhone": "Por favor ingresa un número de teléfono válido",
     "minLength": "Se requieren mínimo {{count}} caracteres",
     "maxLength": "Máximo {{count}} caracteres permitidos"
+  },
+  "payments": {
+    "title": "Pagos",
+    "count_one": "pago",
+    "count_other": "pagos",
+    "noPayments": "No hay pagos",
+    "comingSoon": "Próximamente..."
+  },
+  "maintenance": {
+    "title": "Mantenimiento",
+    "count_one": "solicitud",
+    "count_other": "solicitudes",
+    "noRequests": "No hay solicitudes de mantenimiento",
+    "createRequest": "Nueva Solicitud",
+    "comingSoon": "Próximamente..."
+  },
+  "documents": {
+    "title": "Documentos",
+    "count_one": "documento",
+    "count_other": "documentos",
+    "noDocuments": "No hay documentos",
+    "comingSoon": "Próximamente..."
+  },
+  "financial": {
+    "title": "Finanzas",
+    "count_one": "transacción",
+    "count_other": "transacciones",
+    "noTransactions": "No hay transacciones",
+    "comingSoon": "Próximamente..."
   }
 }

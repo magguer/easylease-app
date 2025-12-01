@@ -27,7 +27,7 @@ export default function DashboardScreen() {
     try {
       const userData = await getUser();
       setUser(userData);
-      
+
       // Load stats based on role
       if (userData?.role === 'manager') {
         const response = await api.dashboard.getStats();
@@ -38,7 +38,7 @@ export default function DashboardScreen() {
           activeListings: response.data.stats.listings.active,
           totalLeads: response.data.stats.leads.total,
           newLeads: response.data.stats.leads.new,
-          totalPartners: response.data.stats.partners.total,
+          totalOwners: response.data.stats.owners.total,
           totalTenants: response.data.stats.tenants.total,
           activeTenants: response.data.stats.tenants.active,
           tenantsEndingSoon: response.data.stats.tenants.ending_soon,
@@ -110,69 +110,85 @@ function ManagerDashboard({ stats, refreshing, onRefresh }: { stats: DashboardSt
         </TouchableOpacity>
       </View>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Manager */}
       <View style={styles.statsGrid}>
+        {/* Owners Card - First */}
+        <View style={[styles.statCard, styles.warningCard]}>
+          <View style={styles.statRow}>
+            <UserSquare2 size={32} color="#E89E8C" />
+            <Text style={styles.statValue}>{stats?.totalOwners || 0}</Text>
+          </View>
+          <Text style={styles.statLabel}>{t('dashboard.totalPartners')}</Text>
+        </View>
+
+        {/* Tenants Card - Second */}
+        <View style={[styles.statCard, styles.successCard]}>
+          <View style={styles.statRow}>
+            <Users size={32} color="#7BA89E" />
+            <Text style={styles.statValue}>{stats?.totalTenants || 0}</Text>
+          </View>
+          <Text style={styles.statLabel}>{t('dashboard.totalTenants')}</Text>
+          <Text style={styles.statSubtext}>
+            {stats?.activeTenants || 0} {t('dashboard.active').toLowerCase()}
+          </Text>
+        </View>
+
+        {/* Properties Card - Third */}
         <View style={[styles.statCard, styles.primaryCard]}>
-          <Building2 size={32} color="#4D7EA8" />
-          <Text style={styles.statValue}>{stats?.totalListings || 0}</Text>
+          <View style={styles.statRow}>
+            <Building2 size={32} color="#4D7EA8" />
+            <Text style={styles.statValue}>{stats?.totalListings || 0}</Text>
+          </View>
           <Text style={styles.statLabel}>{t('dashboard.totalListings')}</Text>
           <Text style={styles.statSubtext}>
             {stats?.activeListings || 0} {t('dashboard.activeListings').toLowerCase()}
           </Text>
-        </View>
-
-        <View style={[styles.statCard, styles.accentCard]}>
-          <Users size={32} color="#9E90A2" />
-          <Text style={styles.statValue}>{stats?.totalLeads || 0}</Text>
-          <Text style={styles.statLabel}>{t('dashboard.totalLeads')}</Text>
-          <Text style={styles.statSubtext}>
-            {stats?.newLeads || 0} {t('dashboard.newLeads').toLowerCase()}
-          </Text>
-        </View>
-
-        <View style={[styles.statCard, styles.secondaryCard]}>
-          <UserSquare2 size={32} color="#7BA89E" />
-          <Text style={styles.statValue}>{stats?.totalTenants || 0}</Text>
-          <Text style={styles.statLabel}>Total Inquilinos</Text>
-          <Text style={styles.statSubtext}>
-            {stats?.activeTenants || 0} activos
-          </Text>
-        </View>
-
-        <View style={[styles.statCard, styles.warningCard]}>
-          <Building2 size={32} color="#E89E8C" />
-          <Text style={styles.statValue}>{stats?.totalPartners || 0}</Text>
-          <Text style={styles.statLabel}>{t('dashboard.totalPartners')}</Text>
         </View>
       </View>
 
       {/* Quick Actions */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('dashboard.quickActions')}</Text>
-        
+
+        {/* Create Owner */}
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => router.push('/(tabs)/listings')}
+          onPress={() => router.push('/owner/create')}
         >
           <View style={styles.actionIconContainer}>
             <Plus size={24} color="#4D7EA8" />
           </View>
           <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>{t('listings.createListing')}</Text>
-            <Text style={styles.actionSubtitle}>{t('listings.fields.title')}, {t('listings.fields.price').toLowerCase()}</Text>
+            <Text style={styles.actionTitle}>{t('partners.createPartner')}</Text>
+            <Text style={styles.actionSubtitle}>{t('partners.createPartnerDesc')}</Text>
           </View>
         </TouchableOpacity>
 
+        {/* Create Tenant */}
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => router.push('/(tabs)/leads')}
+          onPress={() => router.push('/tenant/create')}
         >
           <View style={styles.actionIconContainer}>
-            <TrendingUp size={24} color="#9E90A2" />
+            <Plus size={24} color="#7BA89E" />
           </View>
           <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>{t('leads.title')}</Text>
-            <Text style={styles.actionSubtitle}>{t('leads.status.new')}, {t('leads.status.contacted').toLowerCase()}</Text>
+            <Text style={styles.actionTitle}>{t('tenants.createTenant')}</Text>
+            <Text style={styles.actionSubtitle}>{t('tenants.createTenantDesc')}</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Create Property */}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.push('/listing/create')}
+        >
+          <View style={styles.actionIconContainer}>
+            <Plus size={24} color="#E89E8C" />
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>{t('listings.createListing')}</Text>
+            <Text style={styles.actionSubtitle}>{t('listings.createListingDesc')}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -190,7 +206,6 @@ function OwnerDashboard({ user, refreshing, onRefresh }: { user: User; refreshin
   const loadOwnerStats = async () => {
     try {
       const response = await api.dashboard.getStats();
-      console.log('Owner Dashboard Stats:', JSON.stringify(response.data, null, 2));
       setStats(response.data);
     } catch (error) {
       console.error('Error loading owner stats:', error);
@@ -242,22 +257,28 @@ function OwnerDashboard({ user, refreshing, onRefresh }: { user: User; refreshin
       {/* Owner Stats */}
       <View style={styles.statsGrid}>
         <View style={[styles.statCard, styles.primaryCard]}>
-          <Building2 size={32} color="#4D7EA8" />
-          <Text style={styles.statValue}>{totalProperties}</Text>
+          <View style={styles.statRow}>
+            <Building2 size={32} color="#4D7EA8" />
+            <Text style={styles.statValue}>{totalProperties}</Text>
+          </View>
           <Text style={styles.statLabel}>{t('dashboard.myProperties')}</Text>
           <Text style={styles.statSubtext}>{rentedProperties} {t('dashboard.rented')}</Text>
         </View>
 
         <View style={[styles.statCard, styles.secondaryCard]}>
-          <UserSquare2 size={32} color="#7BA89E" />
-          <Text style={styles.statValue}>{totalTenants}</Text>
+          <View style={styles.statRow}>
+            <UserSquare2 size={32} color="#7BA89E" />
+            <Text style={styles.statValue}>{totalTenants}</Text>
+          </View>
           <Text style={styles.statLabel}>{t('dashboard.myTenants')}</Text>
           <Text style={styles.statSubtext}>{activeTenants} {t('dashboard.active')}</Text>
         </View>
 
         <View style={[styles.statCard, styles.successCard]}>
-          <DollarSign size={32} color="#7BA89E" />
-          <Text style={styles.statValue}>${monthlyIncome.toLocaleString()}</Text>
+          <View style={styles.statRow}>
+            <DollarSign size={32} color="#7BA89E" />
+            <Text style={styles.statValue}>${monthlyIncome.toLocaleString()}</Text>
+          </View>
           <Text style={styles.statLabel}>{t('dashboard.monthlyIncome')}</Text>
           <Text style={styles.statSubtext}>{t('dashboard.thisMonth')}</Text>
         </View>
@@ -266,7 +287,7 @@ function OwnerDashboard({ user, refreshing, onRefresh }: { user: User; refreshin
       {/* Quick Actions */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('dashboard.quickActions')}</Text>
-        
+
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => router.push('/(tabs)/listings')}
@@ -327,6 +348,36 @@ function OwnerDashboard({ user, refreshing, onRefresh }: { user: User; refreshin
 function TenantDashboard({ user, refreshing, onRefresh }: { user: User; refreshing: boolean; onRefresh: () => void }) {
   const { t } = useTranslation();
   const router = useRouter();
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadTenantStats = async () => {
+    try {
+      const response = await api.dashboard.getStats();
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error loading tenant stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTenantStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#4D7EA8" />
+      </View>
+    );
+  }
+
+  const tenantData = stats?.tenantData;
+  const propertyData = stats?.stats?.property;
+  const hasProperty = !!propertyData;
+  const nextPayment = stats?.stats?.nextPayment;
 
   return (
     <ScrollView
@@ -338,47 +389,88 @@ function TenantDashboard({ user, refreshing, onRefresh }: { user: User; refreshi
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{t('dashboard.myHome')}</Text>
-        <Text style={styles.subtitle}>{t('dashboard.welcomeTenant')}, {user.name}</Text>
+        <View>
+          <Text style={styles.title}>{t('dashboard.myHome')}</Text>
+          <Text style={styles.subtitle}>{t('dashboard.welcomeTenant')}, {user.name}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => router.push('/(tabs)/settings')}
+        >
+          <SettingsIcon size={24} color="#4D7EA8" />
+        </TouchableOpacity>
       </View>
 
-      {/* Tenant Info */}
-      <View style={[styles.infoCard, styles.primaryCard]}>
-        <View style={styles.infoRow}>
-          <HomeIcon size={24} color="#4D7EA8" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>{t('dashboard.yourProperty')}</Text>
-            <Text style={styles.infoValue}>123 Example Street, Apt 4B</Text>
+      {hasProperty ? (
+        <>
+          {/* Property Info */}
+          <View style={[styles.infoCard, styles.primaryCard]}>
+            <View style={styles.infoRow}>
+              <HomeIcon size={24} color="#4D7EA8" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>{t('dashboard.yourProperty')}</Text>
+                <Text style={styles.infoValue}>{propertyData.title}</Text>
+                <Text style={styles.infoSubtext}>{propertyData.address}</Text>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
 
-      <View style={[styles.infoCard, styles.warningCard]}>
-        <View style={styles.infoRow}>
-          <Calendar size={24} color="#E89E8C" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>{t('dashboard.nextPayment')}</Text>
-            <Text style={styles.infoValue}>1 de Diciembre, 2025</Text>
-            <Text style={styles.infoSubtext}>$1,500 AUD</Text>
+          {/* Next Payment */}
+          <View style={[styles.infoCard, styles.warningCard]}>
+            <View style={styles.infoRow}>
+              <Calendar size={24} color="#E89E8C" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>{t('dashboard.nextPayment')}</Text>
+                <Text style={styles.infoValue}>
+                  {new Date(nextPayment?.date).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </Text>
+                <Text style={styles.infoSubtext}>
+                  ${nextPayment?.amount} AUD ({nextPayment?.daysUntil} {t('dashboard.daysUntil')})
+                </Text>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
 
-      <View style={[styles.infoCard, styles.successCard]}>
-        <View style={styles.infoRow}>
-          <Calendar size={24} color="#7BA89E" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>{t('dashboard.leaseEnd')}</Text>
-            <Text style={styles.infoValue}>30 de Junio, 2026</Text>
-            <Text style={styles.infoSubtext}>6 {t('dashboard.monthsRemaining')}</Text>
+          {/* Lease End */}
+          <View style={[styles.infoCard, styles.successCard]}>
+            <View style={styles.infoRow}>
+              <Calendar size={24} color="#7BA89E" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>{t('dashboard.leaseEnd')}</Text>
+                <Text style={styles.infoValue}>
+                  {new Date(tenantData.lease_end).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </Text>
+                <Text style={styles.infoSubtext}>
+                  {tenantData.days_remaining} {t('dashboard.daysRemaining')}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </>
+      ) : (
+        <View style={[styles.infoCard, styles.warningCard]}>
+          <View style={styles.infoRow}>
+            <HomeIcon size={24} color="#E89E8C" />
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>{t('dashboard.noProperty')}</Text>
+              <Text style={styles.infoSubtext}>{t('dashboard.noPropertyMessage')}</Text>
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       {/* Quick Actions */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('dashboard.quickActions')}</Text>
-        
+
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => router.push('/(tabs)/payments')}
@@ -394,19 +486,6 @@ function TenantDashboard({ user, refreshing, onRefresh }: { user: User; refreshi
 
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => router.push('/(tabs)/maintenance')}
-        >
-          <View style={styles.actionIconContainer}>
-            <TrendingUp size={24} color="#9E90A2" />
-          </View>
-          <View style={styles.actionContent}>
-            <Text style={styles.actionTitle}>{t('dashboard.requestMaintenance')}</Text>
-            <Text style={styles.actionSubtitle}>{t('dashboard.maintenanceSubtitle')}</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
           onPress={() => router.push('/(tabs)/documents')}
         >
           <View style={styles.actionIconContainer}>
@@ -415,6 +494,19 @@ function TenantDashboard({ user, refreshing, onRefresh }: { user: User; refreshi
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>{t('dashboard.myDocuments')}</Text>
             <Text style={styles.actionSubtitle}>{t('dashboard.documentsSubtitle')}</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.push('/(tabs)/maintenance')}
+        >
+          <View style={styles.actionIconContainer}>
+            <TrendingUp size={24} color="#9E90A2" />
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>{t('dashboard.requestMaintenance')}</Text>
+            <Text style={styles.actionSubtitle}>{t('dashboard.maintenanceSubtitle')}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -479,6 +571,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
   primaryCard: {
     borderLeftWidth: 4,
     borderLeftColor: '#4D7EA8',
@@ -503,7 +601,6 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '700',
     color: '#272932',
-    marginTop: 12,
   },
   statLabel: {
     fontSize: 14,

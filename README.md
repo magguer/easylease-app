@@ -4,7 +4,7 @@ Aplicación móvil nativa para administradores de EasyLease, desarrollada con Ex
 
 ## 🎯 Objetivo
 
-Facilitar la gestión de propiedades, leads y partners desde dispositivos móviles, permitiendo a los administradores trabajar sobre la marcha con todas las funcionalidades del panel web.
+Facilitar la gestión de propiedades, leads y owners desde dispositivos móviles, permitiendo a los administradores trabajar sobre la marcha con todas las funcionalidades del panel web.
 
 ---
 
@@ -18,24 +18,51 @@ Facilitar la gestión de propiedades, leads y partners desde dispositivos móvil
 
 ### Backend & Autenticación
 - **API**: Misma API que frontend-admin (`easylease-api`)
+- **Arquitectura**: Contract-centric (Tenant ↔ Contract ↔ Listing)
 - **Autenticación**: JWT (JSON Web Tokens) para administradores
 - **Estado**: TBD (React Query / Zustand)
 - **Internacionalización**: i18n-js + expo-localization (Inglés/Español)
+
+### Modelo de Datos (Contract-Centric)
+
+EasyLease usa una arquitectura centrada en contratos:
+
+- **Owner** → Propietarios de las propiedades
+- **Listing** → Propiedades disponibles para alquilar
+- **Tenant** → Inquilinos
+- **Contract** ⭐ → Entidad central que vincula Tenant + Listing + Owner
+
+**Principios clave:**
+- ✅ Los tenants se vinculan a propiedades mediante Contracts
+- ✅ Toda la información del arriendo (fechas, renta, términos) vive en Contracts
+- ❌ No hay relación directa tenant-to-listing
+
+📖 **[Ver documentación completa del modelo de datos](../docs/DATA_MODEL.md)**
 
 ### Funcionalidades
 - ✅ **Gestión Completa de Listings** (propiedades)
   - Ver, crear, editar y eliminar
   - Subir fotos desde cámara del dispositivo
-  - Estados: published, draft, reserved, rented
   
 - ✅ **Gestión Completa de Leads** (contactos)
   - Ver, editar y gestionar estados
   - Comunicación directa (llamadas, emails)
   - Estados: new, contacted, converted, discarded
   
-- ✅ **Gestión Completa de Partners** (socios/propietarios)
+- ✅ **Gestión Completa de Owners** (propietarios)
   - Ver, crear, editar
   - Estados: active, pending, inactive
+
+- ✅ **Gestión Completa de Tenants** (inquilinos)
+  - Ver, crear, editar
+  - Asignar contratos
+  - Estados: active, ending_soon, ended, available
+
+- ✅ **Gestión de Contracts** (contratos)
+  - Crear y asignar contratos
+  - Vincular tenant + listing + owner
+  - Gestión de términos y condiciones
+  - Terminación de contratos
   
 - 🔔 **Push Notifications**
   - Notificaciones cuando lleguen nuevos leads
@@ -58,12 +85,19 @@ easylease-admin-app/
 │   │   ├── index.tsx      # Dashboard
 │   │   ├── listings.tsx   # Lista de propiedades
 │   │   ├── leads.tsx      # Lista de leads
-│   │   └── partners.tsx   # Lista de partners
+│   │   ├── owners.tsx     # Lista de owners
+│   │   └── tenants.tsx    # Lista de tenants
+│   ├── listing/           # Detalle y creación de propiedades
+│   ├── lead/              # Detalle y creación de leads
+│   ├── owner/             # Detalle y creación de owners
+│   ├── tenant/            # Detalle y creación de tenants
+│   ├── contract/          # Creación y gestión de contratos
 │   └── _layout.tsx        # Layout raíz
 ├── components/            # Componentes reutilizables
 │   ├── listings/
 │   ├── leads/
-│   ├── partners/
+│   ├── owners/
+│   ├── tenants/
 │   └── ui/               # Componentes UI base (Tamagui)
 ├── lib/                  # Utilidades y configuración
 │   ├── api.ts           # Cliente API
@@ -348,7 +382,7 @@ eas submit -p android
 ## 🤝 Contribución
 
 Este proyecto es parte del ecosistema EasyLease:
-- `easylease-api` - Backend API
+- `easylease-api` - Backend API (contract-centric architecture)
 - `easylease-frontend-web` - Sitio público
 - `easylease-frontend-admin` - Panel web de administración
 - `easylease-admin-app` - App móvil de administración (este proyecto)

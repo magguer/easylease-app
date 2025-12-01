@@ -12,13 +12,21 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { api } from '@/lib/api';
 import { Users, Phone, Mail, MessageCircle } from '@tamagui/lucide-icons';
+import ListHeader from '@/components/ui/ListHeader';
+import EmptyState from '@/components/ui/EmptyState';
 
 interface Lead {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  phone: string;
-  message: string;
+  phone?: string;
+  message?: string;
+  listing_id?: {
+    _id: string;
+    title: string;
+    slug: string;
+    address: string;
+  };
   status: string;
   createdAt: string;
 }
@@ -31,8 +39,8 @@ export default function LeadsScreen() {
 
   const loadLeads = async () => {
     try {
-      const data = await api.leads.getAll();
-      setLeads(data.leads || []);
+      const response = await api.leads.getAll();
+      setLeads(response.data || []);
     } catch (error) {
       console.error('Error loading leads:', error);
     } finally {
@@ -86,18 +94,38 @@ export default function LeadsScreen() {
         </View>
       </View>
 
-      <Text style={styles.leadMessage} numberOfLines={2}>
-        {item.message}
-      </Text>
+      {item.listing_id && (
+        <Text style={styles.listingInfo}>
+          📍 {item.listing_id.title}
+        </Text>
+      )}
+
+      {item.message && (
+        <Text style={styles.leadMessage} numberOfLines={2}>
+          {item.message}
+        </Text>
+      )}
 
       <View style={styles.leadActions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleCall(item.phone)}
-        >
-          <Phone size={20} color="#4D7EA8" />
-          <Text style={styles.actionText}>{t('leads.actions.call')}</Text>
-        </TouchableOpacity>
+        {item.phone && (
+          <>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleCall(item.phone!)}
+            >
+              <Phone size={20} color="#4D7EA8" />
+              <Text style={styles.actionText}>{t('leads.actions.call')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleWhatsApp(item.phone!)}
+            >
+              <MessageCircle size={20} color="#7BA89E" />
+              <Text style={styles.actionText}>WhatsApp</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
         <TouchableOpacity
           style={styles.actionButton}
@@ -105,14 +133,6 @@ export default function LeadsScreen() {
         >
           <Mail size={20} color="#4D7EA8" />
           <Text style={styles.actionText}>{t('leads.actions.email')}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleWhatsApp(item.phone)}
-        >
-          <MessageCircle size={20} color="#7BA89E" />
-          <Text style={styles.actionText}>WhatsApp</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -128,23 +148,26 @@ export default function LeadsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('leads.title')}</Text>
-      </View>
+      <ListHeader
+        title={t('leads.title')}
+        count={leads.length}
+        countLabel={leads.length === 1 ? t('leads.count_one') : t('leads.count_other')}
+      />
 
       <FlatList
         data={leads}
         renderItem={renderLead}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4D7EA8" />
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Users size={64} color="#E0E0E0" />
-            <Text style={styles.emptyText}>{t('leads.noLeads')}</Text>
-          </View>
+          <EmptyState
+            icon={Users}
+            title={t('leads.noLeads')}
+            subtitle={t('common.pullToRefresh')}
+          />
         }
       />
     </View>
@@ -161,17 +184,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#272932',
   },
   list: {
     padding: 16,
@@ -206,6 +218,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  listingInfo: {
+    fontSize: 13,
+    color: '#4D7EA8',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
   leadMessage: {
     fontSize: 14,
     color: '#828489',
@@ -233,15 +251,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#272932',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 64,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#828489',
-    marginTop: 16,
   },
 });

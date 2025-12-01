@@ -1,10 +1,34 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
+import { DollarSign } from '@tamagui/lucide-icons';
+import ListHeader from '@/components/ui/ListHeader';
+import EmptyState from '@/components/ui/EmptyState';
 
 export default function FinancialScreen() {
+  const { t } = useTranslation();
+  const transactions: any[] = [];
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Financial</Text>
-      <Text style={styles.subtitle}>Coming soon...</Text>
+      <ListHeader
+        title={t('financial.title')}
+        count={transactions.length}
+        countLabel={transactions.length === 1 ? t('financial.count_one') : t('financial.count_other')}
+      />
+
+      <FlatList
+        data={transactions}
+        renderItem={() => null}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <EmptyState
+            icon={DollarSign}
+            title={t('financial.noTransactions')}
+            subtitle={t('financial.comingSoon')}
+          />
+        }
+      />
     </View>
   );
 }
@@ -12,18 +36,9 @@ export default function FinancialScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#F8F9FA',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#272932',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#828489',
+  list: {
+    padding: 16,
   },
 });
