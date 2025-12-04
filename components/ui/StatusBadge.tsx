@@ -42,6 +42,8 @@ export default function StatusBadge({ status, type, label, style }: StatusBadgeP
       switch (status) {
         case 'draft':
           return '#94A3B8';
+        case 'available':
+          return '#3B82F6';
         case 'active':
           return '#22C55E';
         case 'ending_soon':
@@ -94,6 +96,7 @@ export default function StatusBadge({ status, type, label, style }: StatusBadgeP
     } else if (type === 'contract') {
       const statusMap: Record<string, string> = {
         'draft': 'Borrador',
+        'available': 'Disponible',
         'active': 'Activo',
         'ending_soon': 'Por Vencer',
         'ended': 'Finalizado',

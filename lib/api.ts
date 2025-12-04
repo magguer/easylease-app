@@ -226,6 +226,10 @@ export const api = {
       const response = await apiClient.post(`/contracts/${id}/restart`);
       return response.data;
     },
+    duplicate: async (id: string, data?: { start_date?: string; end_date?: string }) => {
+      const response = await apiClient.post(`/contracts/${id}/duplicate`, data);
+      return response.data;
+    },
     assignTenant: async (id: string, tenant_id: string) => {
       const response = await apiClient.post(`/contracts/${id}/assign-tenant`, { tenant_id });
       return response.data;

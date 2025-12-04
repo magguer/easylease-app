@@ -262,10 +262,7 @@ export default function TenantDetailScreen() {
               {canEdit && (
                 <TouchableOpacity
                   style={styles.assignButton}
-                  onPress={() => router.push({
-                    pathname: '/contract/create',
-                    params: { tenant_id: tenant._id }
-                  })}
+                  onPress={() => router.push(`/tenant/assign-contract/${tenant._id}`)}
                 >
                   <Text style={styles.assignButtonText}>Asignar Contrato</Text>
                 </TouchableOpacity>

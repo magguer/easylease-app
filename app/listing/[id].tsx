@@ -439,19 +439,32 @@ export default function ListingDetailScreen() {
         {/* Contracts Section */}
         <View style={styles.section}>
           <View style={styles.tenantHeader}>
-            <Text style={styles.sectionTitle}>Contratos</Text>
+            <View>
+              <Text style={styles.sectionTitle}>Contratos</Text>
+              {listing.contracts && listing.contracts.length > 0 && (
+                <Text style={styles.contractsCount}>
+                  {listing.contracts.length} {listing.contracts.length === 1 ? 'contrato' : 'contratos'}
+                </Text>
+              )}
+            </View>
             {(userRole === 'manager' || userRole === 'owner') && (
               <TouchableOpacity
                 style={styles.addContractButton}
                 onPress={() => router.push(`/contract/create?listing_id=${listing._id}`)}
               >
-                <Text style={styles.addContractButtonText}>+ Nuevo Contrato</Text>
+                <Text style={styles.addContractButtonText}>+ Nuevo</Text>
               </TouchableOpacity>
             )}
           </View>
           
           {listing.contracts && listing.contracts.length > 0 ? (
-            <View style={styles.contractsList}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.contractsScrollContent}
+              snapToInterval={width - 60}
+              decelerationRate="fast"
+            >
               {listing.contracts.map((contract, index) => (
                 <TouchableOpacity
                   key={contract._id}
@@ -467,22 +480,22 @@ export default function ListingDetailScreen() {
                     <View style={styles.contractHeaderLeft}>
                       {contract.tenant_id ? (
                         <>
-                          <View style={styles.tenantAvatar}>
+                          <View style={styles.contractTenantAvatar}>
                             <User size={24} color="#FFF" />
                           </View>
                           <View style={styles.contractHeaderInfo}>
-                            <Text style={styles.contractTenantName}>
+                            <Text style={styles.contractTenantName} numberOfLines={1}>
                               {contract.tenant_id.name}
                             </Text>
-                            <Text style={styles.contractDates}>
+                            <Text style={styles.contractDates} numberOfLines={1}>
                               {formatDate(contract.start_date)} - {formatDate(contract.end_date)}
                             </Text>
                           </View>
                         </>
                       ) : (
                         <View style={styles.contractHeaderInfo}>
-                          <Text style={styles.contractTenantName}>Sin inquilino asignado</Text>
-                          <Text style={styles.contractDates}>
+                          <Text style={styles.contractTenantName} numberOfLines={1}>Sin inquilino</Text>
+                          <Text style={styles.contractDates} numberOfLines={1}>
                             {formatDate(contract.start_date)} - {formatDate(contract.end_date)}
                           </Text>
                         </View>
@@ -502,7 +515,7 @@ export default function ListingDetailScreen() {
                       <Text style={styles.contractDetailValue}>${contract.bond_amount}</Text>
                     </View>
                     <View style={styles.contractDetailBox}>
-                      <Text style={styles.contractDetailLabel}>Cuentas Incluidas</Text>
+                      <Text style={styles.contractDetailLabel}>Cuentas</Text>
                       <View style={styles.contractDetailValueRow}>
                         {contract.bills_included ? (
                           <Check size={16} color="#22C55E" />
@@ -510,7 +523,7 @@ export default function ListingDetailScreen() {
                           <X size={16} color="#EF4444" />
                         )}
                         <Text style={styles.contractDetailValue}>
-                          {contract.bills_included ? 'Sí' : 'No'}
+                          {contract.bills_included ? 'Incluidas' : 'No'}
                         </Text>
                       </View>
                     </View>
@@ -534,22 +547,30 @@ export default function ListingDetailScreen() {
                       <View style={styles.contractContactRow}>
                         <View style={styles.contractContactItem}>
                           <Mail size={14} color="#64748B" />
-                          <Text style={styles.contractContactText}>
+                          <Text style={styles.contractContactText} numberOfLines={1}>
                             {contract.tenant_id.email}
                           </Text>
                         </View>
-                        <View style={styles.contractContactItem}>
-                          <Phone size={14} color="#64748B" />
-                          <Text style={styles.contractContactText}>
-                            {contract.tenant_id.phone}
-                          </Text>
-                        </View>
+                        {contract.tenant_id.phone && (
+                          <View style={styles.contractContactItem}>
+                            <Phone size={14} color="#64748B" />
+                            <Text style={styles.contractContactText} numberOfLines={1}>
+                              {contract.tenant_id.phone}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                     </>
                   )}
+                  
+                  {/* View Details Footer */}
+                  <View style={styles.contractFooter}>
+                    <Text style={styles.contractFooterText}>Toca para ver detalles completos</Text>
+                    <ChevronRight size={16} color="#5B9AA8" />
+                  </View>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           ) : (
             <View style={styles.noContractsContainer}>
               <FileText size={48} color="#CBD5E1" />
@@ -1019,6 +1040,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  contractsCount: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  contractsScrollContent: {
+    paddingRight: 20,
+    gap: 16,
+  },
   contractsList: {
     gap: 16,
   },
@@ -1031,11 +1061,13 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    width: width - 60,
+    marginRight: 0,
   },
   activeContractCard: {
     borderColor: '#5B9AA8',
@@ -1045,8 +1077,9 @@ const styles = StyleSheet.create({
   contractCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 16,
+    gap: 12,
   },
   contractHeaderLeft: {
     flexDirection: 'row',
@@ -1054,7 +1087,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 12,
   },
-  tenantAvatar: {
+  contractTenantAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -1072,42 +1105,43 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   contractDates: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748B',
     fontWeight: '500',
   },
   contractDetailsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
     marginTop: 4,
   },
   contractDetailBox: {
     flex: 1,
-    minWidth: '45%',
+    minWidth: '48%',
     backgroundColor: '#F8F9FA',
-    padding: 14,
+    padding: 12,
     borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
   contractDetailLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#94A3B8',
     marginBottom: 6,
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   contractDetailValue: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: '#272932',
   },
   contractDetailValueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   contractDivider: {
     height: 1,
@@ -1127,6 +1161,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748B',
     flex: 1,
+  },
+  contractFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  contractFooterText: {
+    fontSize: 13,
+    color: '#5B9AA8',
+    fontWeight: '600',
   },
   noContractsContainer: {
     alignItems: 'center',

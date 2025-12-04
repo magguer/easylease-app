@@ -76,7 +76,7 @@ export default function EditContractScreen() {
   const [paymentFrequency, setPaymentFrequency] = useState<'weekly' | 'fortnightly' | 'monthly'>('weekly');
   const [billsIncluded, setBillsIncluded] = useState(true);
   const [noticePeriodDays, setNoticePeriodDays] = useState('14');
-  const [status, setStatus] = useState<'draft' | 'active' | 'ending_soon' | 'ended' | 'terminated'>('draft');
+  const [status, setStatus] = useState<'draft' | 'available' | 'active' | 'ending_soon' | 'ended' | 'terminated'>('draft');
   const [terminationReason, setTerminationReason] = useState('');
   const [terminationDate, setTerminationDate] = useState<Date | null>(null);
   
@@ -513,6 +513,22 @@ export default function EditContractScreen() {
             <TouchableOpacity
               style={[
                 styles.statusButton,
+                status === 'available' && styles.statusButtonActive,
+              ]}
+              onPress={() => setStatus('available')}
+            >
+              <Text
+                style={[
+                  styles.statusButtonText,
+                  status === 'available' && styles.statusButtonTextActive,
+                ]}
+              >
+                Disponible
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.statusButton,
                 status === 'active' && styles.statusButtonActive,
               ]}
               onPress={() => setStatus('active')}
@@ -605,22 +621,23 @@ export default function EditContractScreen() {
       {/* Date Pickers */}
       <DatePickerModal
         visible={showStartDatePicker}
-        date={startDate}
-        onDateChange={setStartDate}
+        initialDate={startDate.toISOString()}
+        onSelect={(dateString) => setStartDate(new Date(dateString))}
         onClose={() => setShowStartDatePicker(false)}
         title="Fecha de Inicio"
       />
       <DatePickerModal
         visible={showEndDatePicker}
-        date={endDate}
-        onDateChange={setEndDate}
+        initialDate={endDate.toISOString()}
+        onSelect={(dateString) => setEndDate(new Date(dateString))}
         onClose={() => setShowEndDatePicker(false)}
         title="Fecha de Fin"
+        minimumDate={startDate.toISOString()}
       />
       <DatePickerModal
         visible={showTerminationDatePicker}
-        date={terminationDate || new Date()}
-        onDateChange={setTerminationDate}
+        initialDate={terminationDate ? terminationDate.toISOString() : new Date().toISOString()}
+        onSelect={(dateString) => setTerminationDate(new Date(dateString))}
         onClose={() => setShowTerminationDatePicker(false)}
         title="Fecha de Terminación"
       />

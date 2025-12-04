@@ -161,6 +161,56 @@ export default function ContractDetailScreen() {
     );
   };
 
+  const handleDuplicateContract = async () => {
+    Alert.alert(
+      'Duplicar Contrato',
+      'Se creará un nuevo contrato DRAFT basado en este contrato, manteniendo todos los términos y condiciones. Podrás modificarlo antes de activarlo.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Duplicar',
+          onPress: async () => {
+            try {
+              // Calculate new dates: start today, end 1 year from now
+              const startDate = new Date();
+              const endDate = new Date();
+              endDate.setFullYear(endDate.getFullYear() + 1);
+
+              const response = await api.contracts.duplicate(id as string, {
+                start_date: startDate.toISOString(),
+                end_date: endDate.toISOString(),
+              });
+              
+              Alert.alert(
+                'Éxito',
+                'Contrato duplicado exitosamente',
+                [
+                  {
+                    text: 'Ver Nuevo Contrato',
+                    onPress: () => router.push(`/contract/${response.data._id}`),
+                  },
+                  {
+                    text: 'Ir a Propiedad',
+                    onPress: () => router.push(`/listing/${contract?.listing_id._id}`),
+                  },
+                ]
+              );
+            } catch (error: any) {
+              console.error('Error duplicating contract:', error);
+              Alert.alert(
+                'Error',
+                error.response?.data?.message || 'Error al duplicar el contrato'
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -407,16 +457,52 @@ export default function ContractDetailScreen() {
               </View>
             )}
 
-            {/* Restart Button */}
+            {/* Action Buttons */}
             {(userRole === 'manager' || userRole === 'owner') && (
-              <TouchableOpacity
-                style={styles.restartButton}
-                onPress={handleRestartContract}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.restartButtonText}>Reiniciar Contrato</Text>
-              </TouchableOpacity>
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.duplicateButton}
+                  onPress={handleDuplicateContract}
+                  activeOpacity={0.7}
+                >
+                  <FileText size={18} color="#FFF" />
+                  <Text style={styles.duplicateButtonText}>Duplicar Contrato</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.restartButton}
+                  onPress={handleRestartContract}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.restartButtonText}>Reiniciar Contrato</Text>
+                </TouchableOpacity>
+              </View>
             )}
+          </View>
+        )}
+
+        {/* Ended Contract Actions */}
+        {contract.status === 'ended' && (userRole === 'manager' || userRole === 'owner') && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <FileText size={20} color="#5B9AA8" />
+              <Text style={styles.sectionTitle}>Acciones</Text>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.duplicateButtonFull}
+              onPress={handleDuplicateContract}
+              activeOpacity={0.7}
+            >
+              <FileText size={20} color="#FFF" />
+              <View style={styles.duplicateButtonContent}>
+                <Text style={styles.duplicateButtonTitle}>Duplicar Contrato</Text>
+                <Text style={styles.duplicateButtonSubtitle}>
+                  Crear nuevo contrato draft con los mismos términos
+                </Text>
+              </View>
+              <ChevronRight size={24} color="#FFF" />
+            </TouchableOpacity>
           </View>
         )}
 
@@ -745,8 +831,59 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     lineHeight: 20,
   },
-  restartButton: {
+  actionButtonsContainer: {
     marginTop: 16,
+    gap: 12,
+  },
+  duplicateButton: {
+    backgroundColor: '#5B9AA8',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  duplicateButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  duplicateButtonFull: {
+    backgroundColor: '#5B9AA8',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  duplicateButtonContent: {
+    flex: 1,
+  },
+  duplicateButtonTitle: {
+    color: '#FFF',
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  duplicateButtonSubtitle: {
+    color: '#E0F2F1',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  restartButton: {
     backgroundColor: '#22C55E',
     paddingVertical: 14,
     paddingHorizontal: 24,

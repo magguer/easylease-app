@@ -57,7 +57,7 @@ export default function CreateContractScreen() {
   const [paymentFrequency, setPaymentFrequency] = useState<'weekly' | 'fortnightly' | 'monthly'>('weekly');
   const [billsIncluded, setBillsIncluded] = useState(true);
   const [noticePeriodDays, setNoticePeriodDays] = useState('14');
-  const [status, setStatus] = useState<'draft' | 'active'>('draft');
+  const [status, setStatus] = useState<'draft' | 'available' | 'active'>('draft');
   
   // Terms
   const [petsAllowed, setPetsAllowed] = useState(false);
@@ -524,6 +524,25 @@ export default function CreateContractScreen() {
             <TouchableOpacity
               style={[
                 styles.statusButton,
+                status === 'available' && styles.statusButtonActive,
+              ]}
+              onPress={() => setStatus('available')}
+            >
+              <Text
+                style={[
+                  styles.statusButtonText,
+                  status === 'available' && styles.statusButtonTextActive,
+                ]}
+              >
+                Disponible
+              </Text>
+              <Text style={styles.statusButtonSubtext}>
+                Publicar en la web
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.statusButton,
                 status === 'active' && styles.statusButtonActive,
               ]}
               onPress={() => setStatus('active')}
@@ -537,7 +556,7 @@ export default function CreateContractScreen() {
                 Activo
               </Text>
               <Text style={styles.statusButtonSubtext}>
-                Comienza inmediatamente
+                Con inquilino asignado
               </Text>
             </TouchableOpacity>
           </View>
