@@ -3,8 +3,8 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
 // API Base URL - usar la IP de tu máquina para que funcione en dispositivos móviles
-const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.0.26:8008' 
+const API_BASE_URL = __DEV__
+  ? 'http://192.168.0.26:8008'
   : Constants.expoConfig?.extra?.apiUrl || 'https://easylease-api.vercel.app/api';
 
 // Storage keys
@@ -240,6 +240,49 @@ export const api = {
     },
     removeDocument: async (id: string, documentId: string) => {
       const response = await apiClient.delete(`/contracts/${id}/documents/${documentId}`);
+      return response.data;
+    },
+  },
+
+  // Payments
+  payments: {
+    getAll: async (params?: { contract_id?: string; tenant_id?: string; startDate?: string; endDate?: string }) => {
+      const response = await apiClient.get('/payments', { params });
+      return response.data;
+    },
+    create: async (data: any) => {
+      const response = await apiClient.post('/payments', data);
+      return response.data;
+    },
+    update: async (id: string, data: any) => {
+      const response = await apiClient.put(`/payments/${id}`, data);
+      return response.data;
+    },
+    delete: async (id: string) => {
+      const response = await apiClient.delete(`/payments/${id}`);
+      return response.data;
+    },
+    getStats: async (owner_id?: string) => {
+      const params = owner_id ? { owner_id } : {};
+      const response = await apiClient.get('/payments/stats', { params });
+      return response.data;
+    }
+  },
+
+  // Documents
+  documents: {
+    getAll: async (entity_type: string, entity_id: string) => {
+      const response = await apiClient.get('/documents', {
+        params: { entity_type, entity_id }
+      });
+      return response.data;
+    },
+    create: async (data: any) => {
+      const response = await apiClient.post('/documents', data);
+      return response.data;
+    },
+    delete: async (id: string) => {
+      const response = await apiClient.delete(`/documents/${id}`);
       return response.data;
     },
   },

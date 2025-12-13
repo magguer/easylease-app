@@ -1,5 +1,6 @@
 {
   "common": {
+    "logout": "Logout",
     "appName": "EasyLease Admin",
     "loading": "Loading...",
     "error": "Error",

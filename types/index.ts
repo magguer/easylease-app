@@ -220,3 +220,78 @@ export interface PaginatedResponse<T> {
   total: number;
   totalPages: number;
 }
+
+// Payments
+export interface Payment {
+  id: string;
+  _id?: string;
+  amount: number;
+  type: 'rent' | 'bond' | 'bill' | 'expense' | 'other';
+  status: 'paid' | 'pending' | 'overdue' | 'cancelled';
+  date: string;
+  period_start?: string;
+  period_end?: string;
+  contract_id: string | Contract; // Can be populated
+  tenant_id?: string | Tenant;
+  owner_id?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreatePaymentData {
+  amount: number;
+  type: string;
+  status?: string;
+  date: string;
+  contract_id: string;
+  description?: string;
+}
+
+// Documents
+export interface Document {
+  id: string;
+  _id?: string;
+  title: string;
+  url: string;
+  type: 'contract' | 'id' | 'income_proof' | 'receipt' | 'notice' | 'other';
+  entity_type: 'Tenant' | 'Contract' | 'Listing' | 'Owner';
+  entity_id: string;
+  mime_type?: string;
+  size_bytes?: number;
+  uploaded_by?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateDocumentData {
+  title: string;
+  url: string;
+  type: string;
+  entity_type: string;
+  entity_id: string;
+  mime_type?: string;
+  size_bytes?: number;
+}
+
+// Contract (Update with potentially missing fields if any)
+export interface Contract {
+  id: string;
+  _id?: string;
+  tenant_id: string | Tenant;
+  listing_id: string | Listing;
+  owner_id: string;
+  start_date: string;
+  end_date: string;
+  weekly_rent: number;
+  bond_amount: number;
+  bond_paid: boolean;
+  status: 'draft' | 'active' | 'ending_soon' | 'ended' | 'terminated';
+  payment_frequency: 'weekly' | 'fortnightly' | 'monthly';
+  terms?: {
+    pets_allowed: boolean;
+    smoking_allowed: boolean;
+  };
+  days_remaining?: number;
+  is_ending_soon?: boolean;
+}

@@ -7,11 +7,17 @@ import { getUser } from '@/lib/auth';
 import { UserRole } from '@/types';
 import { Home, Building2, Users, UserSquare2, Settings, FileText, DollarSign, Wrench } from '@tamagui/lucide-icons';
 
+import GlobalHeader from '@/components/ui/GlobalHeader';
+import NavigationMenu from '@/components/ui/NavigationMenu';
+import { Alert } from 'react-native';
+
 export default function TabsLayout() {
   const { t, language } = useTranslation();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   useEffect(() => {
     // Get user role on mount
@@ -22,6 +28,15 @@ export default function TabsLayout() {
     };
     loadUserRole();
   }, []);
+
+  const handleMenuPress = () => {
+    Alert.alert('Menu', 'Opened Navigation Drawer');
+    // TODO: Implement Drawer navigation or Sidebar
+  };
+
+  const handleProfilePress = () => {
+    router.push('/user/profile' as any);
+  };
 
   // Show loading while checking user role
   if (loading) {
@@ -209,19 +224,13 @@ export default function TabsLayout() {
               tabBarIcon: ({ color, size }) => <Wrench size={size} color={color} />,
             }}
           />
-          <Tabs.Screen
-            name="settings"
-            options={{
-              title: t('navigation.settings'),
-              tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
-            }}
-          />
           {/* Hidden tabs for tenant */}
           <Tabs.Screen name="owners" options={{ href: null }} />
           <Tabs.Screen name="tenants" options={{ href: null }} />
           <Tabs.Screen name="listings" options={{ href: null }} />
           <Tabs.Screen name="leads" options={{ href: null }} />
           <Tabs.Screen name="financial" options={{ href: null }} />
+          <Tabs.Screen name="settings" options={{ href: null }} />
         </Tabs>
       );
     }
@@ -230,7 +239,16 @@ export default function TabsLayout() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
+      <GlobalHeader
+        onMenuPress={() => setMenuVisible(true)}
+        onProfilePress={handleProfilePress}
+      />
+      <NavigationMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        userRole={userRole}
+      />
       {renderTabsByRole()}
     </View>
   );

@@ -1,5 +1,6 @@
 {
   "common": {
+    "logout": "Cerrar Sesión",
     "appName": "EasyLease Admin",
     "loading": "Cargando...",
     "error": "Error",
@@ -113,7 +114,6 @@
     "noListings": "No se encontraron propiedades",
     "createFirst": "Crea tu primera propiedad",
     "detail": {
-
       "title": "Detalle de Propiedad"
     },
     "fields": {
